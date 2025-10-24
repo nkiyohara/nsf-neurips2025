@@ -11,7 +11,7 @@ from typing import Callable, Tuple
 import numpy as np
 from manim import (
     BLUE, WHITE, BLACK,
-    UP, DOWN, LEFT,
+    UP, DOWN, LEFT, ORIGIN,
     Axes, Create, CurvedArrow, Dot, FadeIn, FadeOut,
     LaggedStart, Line, MathTex, MovingCameraScene, Scene, Succession,
     Tex, VGroup, Write, config,
@@ -84,7 +84,7 @@ class EulerMaruyamaZoom(MovingCameraScene):
             x_length=10,
             y_length=5,
             tips=False,
-        ).to_edge(DOWN).set_color(BLACK)
+        ).move_to(ORIGIN).set_color(BLACK)
         axes.x_axis.set_opacity(0)
         axes.y_axis.set_opacity(0)
 
