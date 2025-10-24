@@ -132,14 +132,14 @@ class EulerMaruyamaZoom(MovingCameraScene):
         )
         state_axis_line.set_cap_style(CapStyleType.ROUND)
         x_label = (
-            Tex(r"time $t$")
-            .scale(0.6)
+            Tex(r"Time $t$")
+            .scale(0.75)
             .next_to(time_axis_line, DOWN, buff=0.2)
             .set_color(BLACK)
         )
         y_label = (
-            Tex(r"state $x$")
-            .scale(0.6)
+            Tex(r"State $x$")
+            .scale(0.75)
             .next_to(state_axis_line, LEFT, buff=0.2)
             .set_color(BLACK)
         )
@@ -150,7 +150,7 @@ class EulerMaruyamaZoom(MovingCameraScene):
         # On-screen text per storyboard
         discretize_text = (
             Tex(r"Discretize time: $t=0, \Delta t, 2\Delta t, \dots$")
-            .scale(0.7)
+            .scale(0.75)
             .set_color(BLACK)
         )
         discretize_text.to_edge(UP)
@@ -380,14 +380,14 @@ class EnsembleToContour(Scene):
         state_axis_line.set_cap_style(CapStyleType.ROUND)
 
         x_label = (
-            Tex(r"time $t$")
-            .scale(0.6)
+            Tex(r"Time $t$")
+            .scale(0.75)
             .next_to(time_axis_line, DOWN, buff=0.2)
             .set_color(BLACK)
         )
         y_label = (
-            Tex(r"state $x$")
-            .scale(0.6)
+            Tex(r"State $x$")
+            .scale(0.75)
             .next_to(state_axis_line, LEFT, buff=0.2)
             .set_color(BLACK)
         )
@@ -565,18 +565,24 @@ class DirectSampling(Scene):
 
         self.add(axes)
         self.play(Create(state_axis_line), Create(time_axis_line))
-        # Add circular end caps to make axis ends appear rounded
+        
+        # Add axis labels
+        state_label = Tex(r"State $x$").scale(0.75).set_color(BLACK)
+        state_label.next_to(state_axis_line, LEFT, buff=0.2)
+        time_label = Tex(r"Time $t$").scale(0.75).set_color(BLACK)
+        time_label.next_to(time_axis_line, DOWN, buff=0.2)
+        self.add(state_label, time_label)
 
         # Title and formula indicating one-step sampling at arbitrary time
         t_title = (
             Text("One-step sampling at arbitrary time")
-            .scale(0.7)
+            .scale(0.75)
             .to_edge(UP)
             .set_color(BLACK)
         )
         formula = (
             MathTex(r"x_t \sim p_\theta(x_t \mid x_s;\, \Delta t)")
-            .scale(0.7)
+            .scale(0.75)
             .next_to(t_title, DOWN, buff=0.12)
             .set_color(BLACK)
         )
@@ -584,6 +590,10 @@ class DirectSampling(Scene):
 
         # Visual metaphor: arrows from a single x_s to multiple samples at different t values
         x0_val = 0.0
+        
+        # Add initial black dot at starting position
+        start_dot = Dot(axes.c2p(0.0, x0_val), color=BLACK, radius=0.06)
+        self.play(FadeIn(start_dot))
 
         times = [0.25, 0.5, 0.75, 1.0]
         time_colors = color_gradient([BLUE, RED], len(times))
@@ -679,14 +689,14 @@ class ChapmanKolmogorovConsistency(Scene):
     def construct(self):
         # ===== Layout =====
         def make_axes():
-            ax = Axes(x_range=[0, 1.0, 0.1], y_range=[-3, 3, 1], x_length=9, y_length=2.88, tips=False).set_color(BLACK)
+            ax = Axes(x_range=[0, 1.0, 0.1], y_range=[-3, 3, 1], x_length=9, y_length=2.6, tips=False).set_color(BLACK)
             ax.x_axis.set_opacity(0)
             ax.y_axis.set_opacity(0)
             return ax
         # Simpler positioning to avoid dependency on constants
         axes_top = make_axes()
-        axes_top.move_to([-1.5, 1.8, 0])
-        axes_bot = make_axes().move_to([-1.5, -1.8, 0])
+        axes_top.move_to([-1.1, 1.7, 0])  # Moved left by 0.3 units from -0.8
+        axes_bot = make_axes().move_to([-1.1, -1.4, 0])  # Moved left by 0.3 units from -0.8
 
         def add_axes_lines(ax: Axes):
             origin_lower = ax.c2p(0, ax.y_range[0])
@@ -702,34 +712,41 @@ class ChapmanKolmogorovConsistency(Scene):
         self.play(Create(lines_top[0]), Create(lines_top[1]), Create(lines_bot[0]), Create(lines_bot[1]))
         
         # Add y-axis labels
-        y_label_top = Tex(r"state $x$").scale(0.6).set_color(BLACK)
+        y_label_top = Tex(r"State $x$").scale(0.65).set_color(BLACK)
         y_label_top.next_to(lines_top[1], LEFT, buff=0.15)
-        y_label_bot = Tex(r"state $x$").scale(0.6).set_color(BLACK)
+        y_label_bot = Tex(r"State $x$").scale(0.65).set_color(BLACK)
         y_label_bot.next_to(lines_bot[1], LEFT, buff=0.15)
+        
         self.add(y_label_top, y_label_bot)
 
         # Titles
-        title = Text("CK consistency: one-step vs two-step", weight="MEDIUM").scale(0.6).to_edge(UP)
-        sub_top = Tex(r"One-step: $x_u \sim p_\theta(x_u\mid x_s;\,\Delta t)$").scale(0.6).set_color(BLACK)
-        sub_bot = Tex(r"Two-step: $x_u \sim \int p_\theta(x_u\mid x_t;\,\Delta t_2)\,p_\theta(x_t\mid x_s;\,\Delta t_1)\,dx_t$").scale(0.6).set_color(BLACK)
+        title = Text("CK consistency: one-step vs two-step", weight="MEDIUM").scale(0.65).to_edge(UP)
+        sub_top = Tex(r"One-step: $x_u \sim p_\theta(x_u\mid x_s;\,\Delta t)$").scale(0.65).set_color(BLACK)
+        sub_bot = Tex(r"Two-step: $x_u \sim \int p_\theta(x_u\mid x_t;\,\Delta t_2)\,p_\theta(x_t\mid x_s;\,\Delta t_1)\,dx_t$").scale(0.65).set_color(BLACK)
         sub_top.next_to(axes_top, UP, buff=0.18)
-        sub_bot.next_to(axes_bot, DOWN, buff=0.18)
+        sub_bot.next_to(axes_bot, DOWN, buff=0.35)
         self.play(FadeIn(title), FadeIn(sub_top), FadeIn(sub_bot))
 
-        # Ticks
-        s, t, u = 0.0, 0.5, 1.0
+        # Ticks and time variables
+        # Display positions on graph
+        s_display, t_display, u_display = 0.0, 0.5, 1.0
+        # Actual time values for computation
+        s_actual, t_actual, u_actual = 0.0, 0.4, 1.0
+        
+        s, t, u = s_display, t_display, u_display  # For graph positions
+        
         def add_ticks(ax: Axes, show_u=False):
             tick_s = Line(ax.c2p(s, -3), ax.c2p(s, -2.85), color=BLACK, stroke_width=2)
             tick_t = Line(ax.c2p(t, -3), ax.c2p(t, -2.85), color=BLACK, stroke_width=2)
             # Center labels below ticks by using move_to with tick's x-coordinate
-            lbl_s = Tex(r'$s$').scale(0.55).set_color(BLACK)
+            lbl_s = Tex(r'$s$').scale(0.6).set_color(BLACK)
             lbl_s.move_to([ax.c2p(s, -3)[0], tick_s.get_bottom()[1] - 0.15, 0])
-            lbl_t = Tex(r'$t$').scale(0.55).set_color(BLACK)
+            lbl_t = Tex(r'$t$').scale(0.6).set_color(BLACK)
             lbl_t.move_to([ax.c2p(t, -3)[0], tick_t.get_bottom()[1] - 0.15, 0])
             self.add(tick_s, tick_t, lbl_s, lbl_t)
             if show_u:
                 tick_u = Line(ax.c2p(u, -3), ax.c2p(u, -2.85), color=BLACK, stroke_width=2)
-                lbl_u = Tex(r'$u$').scale(0.55).set_color(BLACK)
+                lbl_u = Tex(r'$u$').scale(0.6).set_color(BLACK)
                 lbl_u.move_to([ax.c2p(u, -3)[0], tick_u.get_bottom()[1] - 0.15, 0])
                 self.add(tick_u, lbl_u)
         add_ticks(axes_top, True)
@@ -749,41 +766,49 @@ class ChapmanKolmogorovConsistency(Scene):
             return float((1.0 - lamv) * v_ou + lamv * v_bm)
         def sample_one_step(dt: float, n: int, lamv: float):
             aT, vT = a_of_dt(dt, lamv), v_of_dt(dt, lamv)
-            # Create bimodal distribution: mix two Gaussians
+            # Create bimodal distribution: mix two Gaussians with wider separation
             n1 = n // 2
             n2 = n - n1
-            samples1 = aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n1) - 0.6
-            samples2 = aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n2) + 0.8
+            samples1 = aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n1) - 1.0
+            samples2 = aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n2) + 1.2
             return np.concatenate([samples1, samples2])
-        def sample_two_step(dt: float, n: int, lamv: float):
-            du, dv = 0.5*dt, 0.5*dt
-            a1, v1 = a_of_dt(du, lamv), v_of_dt(du, lamv)
-            a2, v2 = a_of_dt(dv, lamv), v_of_dt(dv, lamv)
-            Zu, Zt = rng.normal(size=n), rng.normal(size=n)
-            # Create bimodal for intermediate step
+        def sample_two_step(dt_total: float, n: int, lamv: float):
+            # Actually compute both t and u as independent 1-step samples from s
+            # (not a true 2-step, just showing two different time points)
+            dt_to_t = t_actual - s_actual  # s to t
+            dt_to_u = u_actual - s_actual  # s to u
+            
+            # Sample at t (one-step from s)
+            at, vt = a_of_dt(dt_to_t, lamv), v_of_dt(dt_to_t, lamv)
             n1 = n // 2
             n2 = n - n1
-            X_u1 = a1 * x_s + np.sqrt(max(v1, 1e-9)) * Zu[:n1] - 0.5
-            X_u2 = a1 * x_s + np.sqrt(max(v1, 1e-9)) * Zu[n1:] + 0.7
+            X_t1 = at * x_s + np.sqrt(max(vt, 1e-9)) * rng.normal(size=n1) - 0.9
+            X_t2 = at * x_s + np.sqrt(max(vt, 1e-9)) * rng.normal(size=n2) + 1.1
+            X_t = np.concatenate([X_t1, X_t2])
+            
+            # Sample at u (one-step from s)
+            au, vu = a_of_dt(dt_to_u, lamv), v_of_dt(dt_to_u, lamv)
+            X_u1 = au * x_s + np.sqrt(max(vu, 1e-9)) * rng.normal(size=n1) - 1.0
+            X_u2 = au * x_s + np.sqrt(max(vu, 1e-9)) * rng.normal(size=n2) + 1.2
             X_u = np.concatenate([X_u1, X_u2])
-            X_t = a2 * X_u + np.sqrt(max(v2, 1e-9)) * Zt
-            return X_u, X_t
+            
+            return X_t, X_u
 
         # ===== Stage 1: arrows + samples =====
         N_VIS = 14
-        # Top: one arrow and one column at u
+        # Top: one arrow and one column at u (display position u, actual time u_actual)
         # Start with a larger black dot at s
         dot_top_s = Dot(axes_top.c2p(s, x_s), color=BLACK, radius=0.06)
         self.play(FadeIn(dot_top_s))
         
         arr_top = CurvedArrow(axes_top.c2p(s, 0.0), axes_top.c2p(u-0.03, 0.0), angle=-0.7, color=BLUE, stroke_width=5)
         arr_top.set(stroke_cap=CapStyleType.SQUARE)
-        xs_top = sample_one_step(u-s, N_VIS, lam.get_value())
+        xs_top = sample_one_step(u_actual - s_actual, N_VIS, lam.get_value())
         dots_top_u = VGroup(*[Dot(axes_top.c2p(u, y), color=BLUE, radius=0.032) for y in xs_top])
         self.play(Create(arr_top))
         self.play(LaggedStart(*[FadeIn(d) for d in dots_top_u], lag_ratio=0.05, run_time=0.7))
 
-        # Bottom: two arrows and two columns at t and u
+        # Bottom: two arrows and two columns at t and u (display positions, actual times)
         # Start with a larger black dot at s
         dot_bot_s = Dot(axes_bot.c2p(s, x_s), color=BLACK, radius=0.06)
         self.play(FadeIn(dot_bot_s))
@@ -792,7 +817,7 @@ class ChapmanKolmogorovConsistency(Scene):
         arr_b2 = CurvedArrow(axes_bot.c2p(t, 0.0), axes_bot.c2p(u-0.03, 0.0), angle=+0.8, color=RED, stroke_width=5)
         for a in (arr_b1, arr_b2):
             a.set(stroke_cap=CapStyleType.SQUARE)
-        xt, xu = sample_two_step(u-s, N_VIS, lam.get_value())
+        xt, xu = sample_two_step(u_actual - s_actual, N_VIS, lam.get_value())
         dots_bot_t = VGroup(*[Dot(axes_bot.c2p(t, y), color=RED, radius=0.03) for y in xt])
         dots_bot_u = VGroup(*[Dot(axes_bot.c2p(u, y), color=RED, radius=0.032) for y in xu])
         # First: t arrow and t samples
@@ -835,8 +860,8 @@ class ChapmanKolmogorovConsistency(Scene):
 
         # Animate bars from lines to distributions
         N_BACK = 1500
-        xs1 = sample_one_step(u - s, N_BACK, lam.get_value())
-        xt2, xu2 = sample_two_step(u - s, N_BACK, lam.get_value())
+        xs1 = sample_one_step(u_actual - s_actual, N_BACK, lam.get_value())
+        xt2, xu2 = sample_two_step(u_actual - s_actual, N_BACK, lam.get_value())
         d1 = kde_density(xs1, bw=0.25)
         dt = kde_density(xt2, bw=0.15)  # Narrower bandwidth for intermediate distribution
         d2 = kde_density(xu2, bw=0.25)
@@ -896,7 +921,7 @@ class ChapmanKolmogorovConsistency(Scene):
         
         # Now show the comparison arrow and text
         # Right comparator using a curved double-ended arrow
-        right_x = axes_top.c2p(1.0, 0)[0] + 0.7
+        right_x = axes_top.c2p(1.0, 0)[0] + 0.45  # Move arrow slightly left
         dist_top_y = axes_top.c2p(u, 0.0)[1]
         dist_bot_y = axes_bot.c2p(u, 0.0)[1]
         # Shorten the arrow vertically by moving endpoints closer to center
@@ -910,7 +935,8 @@ class ChapmanKolmogorovConsistency(Scene):
         comp_arrow.add_tip(at_start=True)
         comp_arrow.add_tip(at_start=False)
         
-        match_txt = Text("match these distributions", slant="ITALIC").scale(0.45).set_color(BLACK)
+        # Text with line break to prevent overflow
+        match_txt = Text("Match these\ndistributions", slant="ITALIC").scale(0.65).set_color(BLACK)
         # Position text to the right of the arrow
         match_txt.next_to(comp_arrow, RIGHT, buff=0.25)
         
