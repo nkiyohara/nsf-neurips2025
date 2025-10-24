@@ -10,13 +10,14 @@ from typing import Callable, Tuple
 
 import numpy as np
 from manim import (
-    BLUE, GREEN, ORANGE, RED, WHITE, YELLOW,
+    BLUE, WHITE, BLACK,
     UP, DOWN, LEFT,
     Axes, Create, CurvedArrow, Dot, FadeIn, FadeOut,
-    LaggedStart, Line, MathTex, MovingCameraScene, Scene,
-    Tex, VGroup, Write,
+    LaggedStart, Line, MathTex, MovingCameraScene, Scene, Succession,
+    Tex, VGroup, Write, config,
 )
 
+config.background_color = WHITE
 
 # ---------------------------
 # Utilities and SDE helpers
@@ -68,43 +69,8 @@ def make_ou_sde(kappa: float = 1.0, theta: float = 0.0, sigma: float = 1.0) -> S
     return SDESpec(drift=drift, diffusion=diffusion)
 
 
-# ---------------------------
-# Scene 1: SDE introduction
-# ---------------------------
-
-class SDEIntro(Scene):
-    """Introduce continuous-time stochastic dynamics via SDE and how to simulate."""
-
-    def construct(self):
-        title = Tex("Continuous-time Stochastic Dynamics").scale(0.9)
-        subtitle = Tex("Stochastic Differential Equation (SDE)").next_to(title, DOWN)
-
-        sde_eq = MathTex(r"dX_t = f(X_t, t)\, dt + g(X_t, t)\, dW_t").scale(1.0)
-        explain = Tex(
-            "We simulate SDEs numerically using discretization methods,",
-            " e.g., Euler--Maruyama."
-        ).scale(0.7).next_to(sde_eq, DOWN)
-
-        self.play(Write(title))
-        self.play(FadeIn(subtitle, shift=0.2 * DOWN))
-        self.wait(0.3)
-        self.play(LaggedStart(Create(Line([-4, 2.2, 0], [4, 2.2, 0])), FadeIn(sde_eq), lag_ratio=0.2))
-        self.play(FadeIn(explain))
-        self.wait(1.2)
-
-        steps = VGroup(
-            Tex("1. Choose drift f and diffusion g.").scale(0.7),
-            Tex("2. Pick time grid $t = 0, \\Delta t, 2\\Delta t, \\dots$").scale(0.7),
-            Tex("3. Iterate with Gaussian noise increments $\\Delta W \\sim N(0, \\Delta t)$.").scale(0.7),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(explain, DOWN, buff=0.6)
-
-        self.play(LaggedStart(*[FadeIn(item, shift=0.2 * DOWN) for item in steps], lag_ratio=0.15))
-        self.wait(1.5)
-        self.play(*[FadeOut(m) for m in [steps, explain, sde_eq, subtitle, title]])
-
-
 # ------------------------------------------------------
-# Scene 2: Euler–Maruyama step-by-step then zoom out
+# Scene: Euler–Maruyama step-by-step then zoom out
 # ------------------------------------------------------
 
 class EulerMaruyamaZoom(MovingCameraScene):
@@ -118,66 +84,197 @@ class EulerMaruyamaZoom(MovingCameraScene):
             x_length=10,
             y_length=5,
             tips=False,
-        ).to_edge(DOWN)
+        ).to_edge(DOWN).set_color(BLACK)
+        axes.x_axis.set_opacity(0)
+        axes.y_axis.set_opacity(0)
 
-        x_label = Tex("time t").scale(0.6).next_to(axes.x_axis, DOWN, buff=0.2)
-        y_label = Tex("state X").scale(0.6).next_to(axes.y_axis, LEFT, buff=0.2)
+        origin_lower = axes.c2p(0, axes.y_range[0])
+        time_axis_line = Line(
+            origin_lower,
+            axes.c2p(axes.x_range[1], axes.y_range[0]),
+            color=BLACK,
+        )
+        state_axis_line = Line(
+            origin_lower,
+            axes.c2p(0, axes.y_range[1]),
+            color=BLACK,
+        )
 
-        self.play(Create(axes), FadeIn(x_label), FadeIn(y_label))
+        x_label = Tex(r"time $t$").scale(0.6).next_to(time_axis_line, DOWN, buff=0.2).set_color(BLACK)
+        y_label = Tex(r"state $x$").scale(0.6).next_to(state_axis_line, LEFT, buff=0.2).set_color(BLACK)
+
+        self.add(axes)
+        self.play(Create(state_axis_line), Create(time_axis_line), FadeIn(x_label), FadeIn(y_label))
+
+        # On-screen text per storyboard
+        discretize_text = Tex(r"Discretize time: $t=0, \Delta t, 2\Delta t, \dots$").scale(0.7).set_color(BLACK)
+        discretize_text.to_edge(UP)
+        self.play(FadeIn(discretize_text))
 
         # Define SDE and EM parameters
         sde = make_ou_sde(kappa=1.2, theta=0.0, sigma=0.8)
         x0 = 0.0
         t0, t1 = 0.0, 1.0
-        num_steps_zoom = 20
-        rng = np.random.default_rng(42)
+        num_steps_dense = 120
+        stretch_factor = 4.0  # Start 4x coarser (shows more of the trajectory)
 
-        times_zoom, xs_zoom = euler_maruyama(sde, x0, t0, t1, num_steps_zoom, rng)
+        # Calculate coarse steps
+        num_steps_coarse = int(num_steps_dense / stretch_factor)
+        
+        # Generate COARSE trajectory for the first simulation
+        rng_coarse = np.random.default_rng(42)
+        times_coarse, xs_coarse = euler_maruyama(sde, x0, t0, t1, num_steps_coarse, rng_coarse)
+        
+        # Generate DENSE trajectory for the second simulation  
+        rng_dense = np.random.default_rng(42)
+        times_dense, xs_dense = euler_maruyama(sde, x0, t0, t1, num_steps_dense, rng_dense)
+        
+        # Create grid lines at dense positions (121 lines)
+        grid_marks = VGroup(
+            *[
+                Line(
+                    axes.c2p(time_val, axes.y_range[0]),
+                    axes.c2p(time_val, axes.y_range[1]),
+                    color=BLACK,
+                    stroke_opacity=0.18,
+                )
+                for time_val in times_dense
+            ]
+        )
+        
+        # Stretch the entire grid horizontally to spread it out
+        grid_marks.stretch_about_point(stretch_factor, 0, origin_lower)
+        
+        # Add clipping: manually hide lines outside the x-axis range
+        x_min = axes.c2p(0, 0)[0]
+        x_max = axes.c2p(axes.x_range[1], 0)[0]
+        
+        # First, set all lines to be visible for FadeIn
+        self.add(grid_marks)
+        
+        # During FadeIn, only show lines within range
+        visible_lines = VGroup(*[line for line in grid_marks if x_min <= line.get_center()[0] <= x_max])
+        hidden_lines = VGroup(*[line for line in grid_marks if line.get_center()[0] < x_min or line.get_center()[0] > x_max])
+        
+        # Calculate how many coarse grid lines are visible
+        num_visible_grid_lines = len(visible_lines)
+        
+        # We need to generate a coarse trajectory whose vertices lie exactly on the
+        # visible grid lines. Use the exact time span of the last visible dense grid line.
+        num_steps_coarse_visible = num_visible_grid_lines - 1
+        visible_time_end = times_dense[num_steps_coarse_visible]
+        
+        # Regenerate coarse trajectory over [t0, visible_time_end] so that, after stretching,
+        # its vertices align with the visible grid lines.
+        rng_coarse = np.random.default_rng(42)
+        times_coarse_visible, xs_coarse_visible = euler_maruyama(
+            sde, x0, t0, float(visible_time_end), num_steps_coarse_visible, rng_coarse
+        )
+        
+        # Debug: print grid info
+        print(f"Total grid lines: {len(grid_marks)}, Visible: {len(visible_lines)}, Hidden: {len(hidden_lines)}")
+        print(f"x_min: {x_min}, x_max: {x_max}")
+        print(f"Coarse trajectory time end (visible): {visible_time_end:.6f}")
+        print(f"Coarse trajectory points (visible): {len(times_coarse_visible)}, segments: {num_steps_coarse_visible}")
+        
+        # Hide lines outside range before animation
+        for line in hidden_lines:
+            line.set_opacity(0)
+        
+        self.play(FadeIn(visible_lines))
 
-        # Plot piecewise linear path step-by-step
-        path_lines = VGroup()
+        # Draw coarse trajectory using the visible coarse trajectory
+        # Create points using times_coarse_visible positions and xs_coarse_visible values
+        coarse_points = [axes.c2p(times_coarse_visible[j], xs_coarse_visible[j]) 
+                        for j in range(len(times_coarse_visible))]
+        coarse_curve = VGroup(
+            *[
+                Line(coarse_points[i - 1], coarse_points[i], color=BLUE, stroke_width=2)
+                for i in range(1, len(coarse_points))
+            ]
+        )
+        # Stretch the curve to match the stretched grid
+        coarse_curve.stretch_about_point(stretch_factor, 0, origin_lower)
+        
+        # Clip curve manually - check if ANY part of the segment is visible
+        visible_segments = VGroup()
+        hidden_segments = VGroup()
+        for line in coarse_curve:
+            # Get start and end points of the line segment
+            start_x = line.get_start()[0]
+            end_x = line.get_end()[0]
+            # Show segment if any part is within visible range
+            if (start_x >= x_min and start_x <= x_max) or (end_x >= x_min and end_x <= x_max) or (start_x < x_min and end_x > x_max):
+                visible_segments.add(line)
+            else:
+                line.set_opacity(0)
+                hidden_segments.add(line)
+
+        # Debug: print how many segments are visible
+        print(f"Total coarse segments: {len(coarse_curve)}, Visible: {len(visible_segments)}, Hidden: {len(hidden_segments)}")
+        print(f"Expected: Grid lines visible = {num_visible_grid_lines}, Trajectory points = {len(times_coarse_visible)}, Trajectory segments = {len(coarse_curve)}")
+        
+        # Step-by-step plotting: for each segment, draw the line then place a dot at its end
         dots = VGroup()
-        for k in range(len(times_zoom)):
-            point = axes.c2p(times_zoom[k], xs_zoom[k])
-            dot = Dot(point, radius=0.04, color=YELLOW)
-            dots.add(dot)
-            if k > 0:
-                prev_point = axes.c2p(times_zoom[k - 1], xs_zoom[k - 1])
-                seg = Line(prev_point, point, color=YELLOW)
-                path_lines.add(seg)
+        step_animations = []
+        for seg in visible_segments:
+            end_dot = Dot(seg.get_end(), radius=0.04, color=BLUE)
+            dots.add(end_dot)
+            step_animations.extend([Create(seg), FadeIn(end_dot)])
 
-        # Draw time grid marks
-        grid_marks = VGroup()
-        for t in times_zoom:
-            p0 = axes.c2p(t, -3)
-            p1 = axes.c2p(t, 3)
-            grid_marks.add(Line(p0, p1, color=WHITE, stroke_opacity=0.15))
-
-        self.play(FadeIn(grid_marks))
-
-        # Animate step-by-step EM
-        self.play(FadeIn(dots[0]))
-        for k in range(1, len(times_zoom)):
-            self.play(Create(path_lines[k - 1]), FadeIn(dots[k]), run_time=0.2)
+        self.play(Succession(*step_animations), run_time=1.6)
         self.wait(0.6)
+        self.play(FadeOut(visible_segments), FadeOut(dots))
+        # No need to remove hidden segments since they were never added
 
-        # Zoom out, hide grid, extend to a longer, denser path that looks continuous
-        self.play(self.camera.frame.animate.scale(1.2).move_to(axes.get_center()))
+        # Animate: compress grid to dense spacing with dynamic clipping
+        def update_grid_clipping(mob):
+            """Updater to hide lines outside x-axis range during animation"""
+            for line in mob:
+                line_x = line.get_center()[0]
+                if x_min <= line_x <= x_max:
+                    # Line is in visible range
+                    if line.get_stroke_opacity() < 0.08:
+                        line.set_stroke(opacity=0.08)
+                else:
+                    # Line is outside visible range
+                    if line.get_stroke_opacity() > 0:
+                        line.set_opacity(0)
+        
+        grid_marks.add_updater(update_grid_clipping)
+        
+        self.play(
+            grid_marks.animate.stretch_about_point(
+                1 / stretch_factor,
+                0,
+                origin_lower,
+            ).set_stroke(opacity=0.08),
+            run_time=2.0,
+        )
+        
+        grid_marks.remove_updater(update_grid_clipping)
+        # Final cleanup: ensure all visible lines have correct opacity
+        for line in grid_marks:
+            line_x = line.get_center()[0]
+            if x_min <= line_x <= x_max:
+                line.set_stroke(opacity=0.08)
+            else:
+                line.set_opacity(0)
 
-        num_steps_long = 400
-        times_long, xs_long = euler_maruyama(sde, x0, t0, t1, num_steps_long, rng)
-        curve_points = [axes.c2p(times_long[i], xs_long[i]) for i in range(len(times_long))]
+        self.play(FadeOut(discretize_text))
+
+        curve_points = [axes.c2p(times_dense[i], xs_dense[i]) for i in range(len(times_dense))]
         continuous_curve = VGroup(
             *[Line(curve_points[i - 1], curve_points[i], color=BLUE, stroke_width=2) for i in range(1, len(curve_points))]
         )
 
-        self.play(FadeOut(grid_marks), FadeOut(dots), FadeOut(path_lines))
-        self.play(LaggedStart(*[Create(seg) for seg in continuous_curve], lag_ratio=0.01, run_time=1.2))
+        self.play(LaggedStart(*[Create(seg) for seg in continuous_curve], lag_ratio=0.01, run_time=1.4))
+        self.play(FadeOut(grid_marks))
         self.wait(0.8)
 
 
 # ----------------------------------------------------------------------
-# Scene 3: Many trajectories then switch to a distribution contour view
+# Scene: Many trajectories then switch to a distribution contour view
 # ----------------------------------------------------------------------
 
 class EnsembleToContour(Scene):
@@ -190,9 +287,9 @@ class EnsembleToContour(Scene):
             x_length=10,
             y_length=5,
             tips=False,
-        ).to_edge(DOWN)
-        x_label = Tex("time t").scale(0.6).next_to(axes.x_axis, DOWN, buff=0.2)
-        y_label = Tex("state X").scale(0.6).next_to(axes.y_axis, LEFT, buff=0.2)
+        ).to_edge(DOWN).set_color(BLACK)
+        x_label = Tex("time t").scale(0.6).next_to(axes.x_axis, DOWN, buff=0.2).set_color(BLACK)
+        y_label = Tex("state X").scale(0.6).next_to(axes.y_axis, LEFT, buff=0.2).set_color(BLACK)
         self.play(Create(axes), FadeIn(x_label), FadeIn(y_label))
 
         sde = make_ou_sde(kappa=1.2, theta=0.0, sigma=0.8)
@@ -207,7 +304,7 @@ class EnsembleToContour(Scene):
         for j in range(num_paths):
             times, xs = euler_maruyama(sde, x0, t0, t1, num_steps, rng)
             pts = [axes.c2p(times[i], xs[i]) for i in range(len(times))]
-            vg = VGroup(*[Line(pts[i - 1], pts[i], color=WHITE, stroke_opacity=0.25) for i in range(1, len(pts))])
+            vg = VGroup(*[Line(pts[i - 1], pts[i], color=BLACK, stroke_opacity=0.25) for i in range(1, len(pts))])
             path_groups.append(vg)
 
         self.play(LaggedStart(*[Create(pg) for pg in path_groups], lag_ratio=0.02, run_time=1.4))
@@ -249,37 +346,37 @@ class EnsembleToContour(Scene):
             bar = VGroup(Line(p00, p01, color=BLUE, stroke_opacity=0.7), Line(p10, p11, color=BLUE, stroke_opacity=0.7), Line(p00, p10, color=BLUE, stroke_opacity=0.7), Line(p01, p11, color=BLUE, stroke_opacity=0.7))
             bars.add(bar)
 
-        label = Tex("Distribution at t=1").scale(0.6).next_to(axes.c2p(1.0, 3.0), UP)
+        label = Tex("Distribution at t=1").scale(0.6).next_to(axes.c2p(1.0, 3.0), UP).set_color(BLACK)
         self.play(LaggedStart(*[FadeOut(pg) for pg in path_groups], lag_ratio=0.02, run_time=0.6))
         self.play(LaggedStart(*[Create(b) for b in bars], lag_ratio=0.01, run_time=1.0), FadeIn(label))
         self.wait(0.8)
 
 
 # ----------------------------------------------------------------------
-# Scene 4: Direct p(x_t|...) one-step sampling visualization
+# Scene: Direct p(x_t|...) one-step sampling visualization
 # ----------------------------------------------------------------------
 
 class DirectSampling(Scene):
     """Illustrate direct sampling from p(x_t | x_0, ...) at arbitrary t in one step."""
 
     def construct(self):
-        title = Tex("Direct one-step sampling of $x_t$").scale(0.9)
+        title = Tex("Direct one-shot sampling of $x_t$").scale(0.9).set_color(BLACK)
         self.play(Write(title))
 
-        formula = MathTex(r"x_t \sim p(x_t\,|\,x_0, t)").next_to(title, DOWN)
-        note = Tex("Model learns the transition distribution to sample at any time.").scale(0.7).next_to(formula, DOWN)
+        formula = MathTex(r"x_t \sim p_\theta(x_t \mid x_s;\, \Delta t)").next_to(title, DOWN).set_color(BLACK)
+        note = Tex("Learn $p(x_t|x_s)$ with conditional normalizing flows.").scale(0.7).next_to(formula, DOWN).set_color(BLACK)
         self.play(FadeIn(formula), FadeIn(note))
 
         # Visual metaphor: arrows from a single x0 to multiple samples at different t values
-        axis = Axes(x_range=[0, 1.0, 0.2], y_range=[-3, 3, 1], x_length=10, y_length=5, tips=False).to_edge(DOWN)
+        axis = Axes(x_range=[0, 1.0, 0.2], y_range=[-3, 3, 1], x_length=10, y_length=5, tips=False).to_edge(DOWN).set_color(BLACK)
         self.play(Create(axis))
         x0_val = 0.0
-        x0_dot = Dot(axis.c2p(0.0, x0_val), color=YELLOW)
-        x0_label = Tex("$x_0$").scale(0.7).next_to(x0_dot, LEFT)
+        x0_dot = Dot(axis.c2p(0.0, x0_val), color=BLACK)
+        x0_label = Tex("$x_s$").scale(0.7).next_to(x0_dot, LEFT).set_color(BLACK)
         self.play(FadeIn(x0_dot), FadeIn(x0_label))
 
         times = [0.25, 0.5, 0.75, 1.0]
-        colors = [ORANGE, GREEN, BLUE, RED]
+        colors = [BLUE, BLUE, BLUE, BLUE]
         rng = np.random.default_rng(7)
 
         # For demo, sample from a simple Gaussian with time-dependent variance
@@ -289,7 +386,7 @@ class DirectSampling(Scene):
             samples = x0_val + rng.normal(0, std, size=num_samples)
             dots = VGroup(*[Dot(axis.c2p(t, s), color=c, radius=0.03) for s in samples])
             arr = CurvedArrow(x0_dot.get_center(), axis.c2p(t, 0.0), angle=-0.8, color=c)
-            t_lab = Tex(f"t={t:.2f}").scale(0.6).next_to(axis.c2p(t, 3.0), UP)
+            t_lab = Tex(f"t={t:.2f}").scale(0.6).next_to(axis.c2p(t, 3.0), UP).set_color(BLACK)
             self.play(Create(arr), FadeIn(t_lab), LaggedStart(*[FadeIn(d) for d in dots], lag_ratio=0.05, run_time=0.6))
             self.wait(0.2)
 
@@ -305,7 +402,6 @@ How to render (examples):
 
 From the project root or the scripts directory:
 
-    manim -pqh scripts/sde_animation.py SDEIntro
     manim -pqh scripts/sde_animation.py EulerMaruyamaZoom
     manim -pqh scripts/sde_animation.py EnsembleToContour
     manim -pqh scripts/sde_animation.py DirectSampling
@@ -316,5 +412,3 @@ Flags:
     -s  : save last frame as image
     --format=gif : save as gif
 """
-
-
