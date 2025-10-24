@@ -749,13 +749,23 @@ class ChapmanKolmogorovConsistency(Scene):
             return float((1.0 - lamv) * v_ou + lamv * v_bm)
         def sample_one_step(dt: float, n: int, lamv: float):
             aT, vT = a_of_dt(dt, lamv), v_of_dt(dt, lamv)
-            return aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n)
+            # Create bimodal distribution: mix two Gaussians
+            n1 = n // 2
+            n2 = n - n1
+            samples1 = aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n1) - 0.6
+            samples2 = aT * x_s + np.sqrt(max(vT, 1e-9)) * rng.normal(size=n2) + 0.8
+            return np.concatenate([samples1, samples2])
         def sample_two_step(dt: float, n: int, lamv: float):
             du, dv = 0.5*dt, 0.5*dt
             a1, v1 = a_of_dt(du, lamv), v_of_dt(du, lamv)
             a2, v2 = a_of_dt(dv, lamv), v_of_dt(dv, lamv)
             Zu, Zt = rng.normal(size=n), rng.normal(size=n)
-            X_u = a1 * x_s + np.sqrt(max(v1, 1e-9)) * Zu
+            # Create bimodal for intermediate step
+            n1 = n // 2
+            n2 = n - n1
+            X_u1 = a1 * x_s + np.sqrt(max(v1, 1e-9)) * Zu[:n1] - 0.5
+            X_u2 = a1 * x_s + np.sqrt(max(v1, 1e-9)) * Zu[n1:] + 0.7
+            X_u = np.concatenate([X_u1, X_u2])
             X_t = a2 * X_u + np.sqrt(max(v2, 1e-9)) * Zt
             return X_u, X_t
 
@@ -791,18 +801,19 @@ class ChapmanKolmogorovConsistency(Scene):
         # Then: u arrow and u samples
         self.play(Create(arr_b2))
         self.play(LaggedStart(*[FadeIn(d) for d in dots_bot_u], lag_ratio=0.05, run_time=0.5))
-
-        # ===== Stage 2: distributions at u, comparator on the right with CurvedArrows =====
+        self.wait(0.4)
+        
+        # ===== Stage 2: distributions at u and t, comparator on the right with CurvedArrows =====
         y_min, y_max, N_BINS = -3.0, 3.0, 160
         y_grid = np.linspace(y_min, y_max, N_BINS + 1)
         ys_center = 0.5*(y_grid[:-1] + y_grid[1:])
         WIDTH, EPS = 0.16, 1e-6
-        def make_bars(ax, color):
+        def make_bars(ax, time_pos, color):
             vg = VGroup()
             for i in range(N_BINS):
                 y0, y1 = y_grid[i], y_grid[i+1]
                 y0p, y1p = ax.c2p(0, y0)[1], ax.c2p(0, y1)[1]
-                x = ax.c2p(u, 0.0)[0]
+                x = ax.c2p(time_pos, 0.0)[0]
                 vg.add(VGroup(
                     Line([x, y0p, 0], [x, y0p, 0], color=color, stroke_opacity=0.95),
                     Line([x, y1p, 0], [x, y1p, 0], color=color, stroke_opacity=0.95),
@@ -810,9 +821,11 @@ class ChapmanKolmogorovConsistency(Scene):
                     Line([x, y0p, 0], [x, y1p, 0], color=color, stroke_opacity=0.95),
                 ))
             return vg
-        bars_top = make_bars(axes_top, BLUE)
-        bars_bot = make_bars(axes_bot, RED)
-        self.play(FadeIn(bars_top), FadeIn(bars_bot))
+        bars_top = make_bars(axes_top, u, BLUE)
+        bars_bot_t = make_bars(axes_bot, t, RED)
+        bars_bot_u = make_bars(axes_bot, u, RED)
+        self.play(FadeOut(dots_top_u), FadeOut(dots_bot_t), FadeOut(dots_bot_u))
+        self.play(FadeIn(bars_top), FadeIn(bars_bot_t), FadeIn(bars_bot_u))
 
         def kde_density(samples: np.ndarray, bw: float = 0.25):
             z = (ys_center[:, None] - samples[None, :]) / (bw + EPS)
@@ -825,6 +838,7 @@ class ChapmanKolmogorovConsistency(Scene):
         xs1 = sample_one_step(u - s, N_BACK, lam.get_value())
         xt2, xu2 = sample_two_step(u - s, N_BACK, lam.get_value())
         d1 = kde_density(xs1, bw=0.25)
+        dt = kde_density(xt2, bw=0.15)  # Narrower bandwidth for intermediate distribution
         d2 = kde_density(xu2, bw=0.25)
         
         # Create alpha tracker for smooth transition from line to distribution
@@ -836,6 +850,7 @@ class ChapmanKolmogorovConsistency(Scene):
                 y0, y1 = y_grid[i], y_grid[i+1]
                 y0p_t, y1p_t = axes_top.c2p(0, y0)[1], axes_top.c2p(0, y1)[1]
                 y0p_b, y1p_b = axes_bot.c2p(0, y0)[1], axes_bot.c2p(0, y1)[1]
+                # Top: distribution at u
                 xc_t = axes_top.c2p(u, 0.0)[0]
                 w_t = a * WIDTH * (d1[i] / (d1.max() + 1e-6))
                 p00 = np.array([xc_t - w_t, y0p_t, 0]); p01 = np.array([xc_t + w_t, y0p_t, 0])
@@ -845,24 +860,37 @@ class ChapmanKolmogorovConsistency(Scene):
                 g[1].become(Line(p10, p11, color=BLUE, stroke_opacity=0.95))
                 g[2].become(Line(p00, p10, color=BLUE, stroke_opacity=0.95))
                 g[3].become(Line(p01, p11, color=BLUE, stroke_opacity=0.95))
-                xc_b = axes_bot.c2p(u, 0.0)[0]
-                w_b = a * WIDTH * (d2[i] / (d2.max() + 1e-6))
-                q00 = np.array([xc_b - w_b, y0p_b, 0]); q01 = np.array([xc_b + w_b, y0p_b, 0])
-                q10 = np.array([xc_b - w_b, y1p_b, 0]); q11 = np.array([xc_b + w_b, y1p_b, 0])
-                g2 = bars_bot[i]
+                # Bottom: distribution at t (narrower)
+                xc_bt = axes_bot.c2p(t, 0.0)[0]
+                w_bt = a * WIDTH * (dt[i] / (dt.max() + 1e-6))
+                r00 = np.array([xc_bt - w_bt, y0p_b, 0]); r01 = np.array([xc_bt + w_bt, y0p_b, 0])
+                r10 = np.array([xc_bt - w_bt, y1p_b, 0]); r11 = np.array([xc_bt + w_bt, y1p_b, 0])
+                gt = bars_bot_t[i]
+                gt[0].become(Line(r00, r01, color=RED, stroke_opacity=0.95))
+                gt[1].become(Line(r10, r11, color=RED, stroke_opacity=0.95))
+                gt[2].become(Line(r00, r10, color=RED, stroke_opacity=0.95))
+                gt[3].become(Line(r01, r11, color=RED, stroke_opacity=0.95))
+                # Bottom: distribution at u
+                xc_bu = axes_bot.c2p(u, 0.0)[0]
+                w_bu = a * WIDTH * (d2[i] / (d2.max() + 1e-6))
+                q00 = np.array([xc_bu - w_bu, y0p_b, 0]); q01 = np.array([xc_bu + w_bu, y0p_b, 0])
+                q10 = np.array([xc_bu - w_bu, y1p_b, 0]); q11 = np.array([xc_bu + w_bu, y1p_b, 0])
+                g2 = bars_bot_u[i]
                 g2[0].become(Line(q00, q01, color=RED, stroke_opacity=0.95))
                 g2[1].become(Line(q10, q11, color=RED, stroke_opacity=0.95))
                 g2[2].become(Line(q00, q10, color=RED, stroke_opacity=0.95))
                 g2[3].become(Line(q01, q11, color=RED, stroke_opacity=0.95))
         
         bars_top.add_updater(update_bars)
-        bars_bot.add_updater(update_bars)
+        bars_bot_t.add_updater(update_bars)
+        bars_bot_u.add_updater(update_bars)
         
         # Animate the transition from lines to distributions
         self.play(alpha.animate.set_value(1.0), run_time=1.8)
         
         bars_top.remove_updater(update_bars)
-        bars_bot.remove_updater(update_bars)
+        bars_bot_t.remove_updater(update_bars)
+        bars_bot_u.remove_updater(update_bars)
         
         self.wait(0.3)
         
@@ -871,8 +899,11 @@ class ChapmanKolmogorovConsistency(Scene):
         right_x = axes_top.c2p(1.0, 0)[0] + 0.7
         dist_top_y = axes_top.c2p(u, 0.0)[1]
         dist_bot_y = axes_bot.c2p(u, 0.0)[1]
-        p_top = np.array([right_x, dist_top_y, 0])
-        p_bot = np.array([right_x, dist_bot_y, 0])
+        # Shorten the arrow vertically by moving endpoints closer to center
+        center_y = (dist_top_y + dist_bot_y) / 2
+        arrow_length_factor = 0.6  # Make arrow 60% of original vertical length
+        p_top = np.array([right_x, center_y + (dist_top_y - center_y) * arrow_length_factor, 0])
+        p_bot = np.array([right_x, center_y + (dist_bot_y - center_y) * arrow_length_factor, 0])
         
         # Create curved double-ended arrow using ArcBetweenPoints with tips on both ends
         comp_arrow = ArcBetweenPoints(p_top, p_bot, angle=-0.5, color=BLACK, stroke_width=4)
