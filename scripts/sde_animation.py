@@ -144,8 +144,8 @@ class EulerMaruyamaZoom(MovingCameraScene):
             .set_color(BLACK)
         )
 
-        self.add(axes)
-        self.play(Create(state_axis_line), Create(time_axis_line), FadeIn(x_label), FadeIn(y_label))
+        # Start with axes and labels already drawn
+        self.add(axes, state_axis_line, time_axis_line, x_label, y_label)
 
         # On-screen text per storyboard
         discretize_text = (
@@ -392,13 +392,8 @@ class EnsembleToContour(Scene):
             .set_color(BLACK)
         )
 
-        self.add(axes)
-        self.play(
-            Create(state_axis_line),
-            Create(time_axis_line),
-            FadeIn(x_label),
-            FadeIn(y_label),
-        )
+        # Start with axes and labels already drawn
+        self.add(axes, state_axis_line, time_axis_line, x_label, y_label)
 
         sde = make_ou_sde(kappa=1.2, theta=0.0, sigma=0.8)
         x0 = 0.0
@@ -563,15 +558,14 @@ class DirectSampling(Scene):
         )
         state_axis_line.set_cap_style(CapStyleType.ROUND)
 
-        self.add(axes)
-        self.play(Create(state_axis_line), Create(time_axis_line))
-        
         # Add axis labels
         state_label = Tex(r"State $x$").scale(0.75).set_color(BLACK)
         state_label.next_to(state_axis_line, LEFT, buff=0.2)
         time_label = Tex(r"Time $t$").scale(0.75).set_color(BLACK)
         time_label.next_to(time_axis_line, DOWN, buff=0.2)
-        self.add(state_label, time_label)
+        
+        # Start with axes and labels already drawn
+        self.add(axes, state_axis_line, time_axis_line, state_label, time_label)
 
         # Title and formula indicating one-step sampling at arbitrary time
         t_title = (
@@ -695,8 +689,8 @@ class ChapmanKolmogorovConsistency(Scene):
             return ax
         # Simpler positioning to avoid dependency on constants
         axes_top = make_axes()
-        axes_top.move_to([-1.1, 1.7, 0])  # Moved left by 0.3 units from -0.8
-        axes_bot = make_axes().move_to([-1.1, -1.4, 0])  # Moved left by 0.3 units from -0.8
+        axes_top.move_to([-1.1, 1.9, 0])  # Moved left by 0.3 units from -0.8
+        axes_bot = make_axes().move_to([-1.1, -2.0, 0])  # Moved left by 0.3 units from -0.8
 
         def add_axes_lines(ax: Axes):
             origin_lower = ax.c2p(0, ax.y_range[0])
@@ -708,23 +702,28 @@ class ChapmanKolmogorovConsistency(Scene):
         lines_top = add_axes_lines(axes_top)
         lines_bot = add_axes_lines(axes_bot)
 
-        self.add(axes_top, axes_bot)
-        self.play(Create(lines_top[0]), Create(lines_top[1]), Create(lines_bot[0]), Create(lines_bot[1]))
-        
         # Add y-axis labels
         y_label_top = Tex(r"State $x$").scale(0.65).set_color(BLACK)
         y_label_top.next_to(lines_top[1], LEFT, buff=0.15)
         y_label_bot = Tex(r"State $x$").scale(0.65).set_color(BLACK)
         y_label_bot.next_to(lines_bot[1], LEFT, buff=0.15)
         
-        self.add(y_label_top, y_label_bot)
+        # Add time axis labels
+        x_label_top = Tex(r"Time").scale(0.65).set_color(BLACK)
+        x_label_top.next_to(lines_top[0], DOWN, buff=0.3)
+        x_label_bot = Tex(r"Time").scale(0.65).set_color(BLACK)
+        x_label_bot.next_to(lines_bot[0], DOWN, buff=0.3)
+        
+        # Start with axes and labels already drawn
+        self.add(axes_top, axes_bot, lines_top[0], lines_top[1], lines_bot[0], lines_bot[1])
+        self.add(y_label_top, y_label_bot, x_label_top, x_label_bot)
 
         # Titles
         title = Text("CK consistency: one-step vs two-step", weight="MEDIUM").scale(0.65).to_edge(UP)
         sub_top = Tex(r"One-step: $x_u \sim p_\theta(x_u\mid x_s;\,\Delta t)$").scale(0.65).set_color(BLACK)
         sub_bot = Tex(r"Two-step: $x_u \sim \int p_\theta(x_u\mid x_t;\,\Delta t_2)\,p_\theta(x_t\mid x_s;\,\Delta t_1)\,dx_t$").scale(0.65).set_color(BLACK)
         sub_top.next_to(axes_top, UP, buff=0.18)
-        sub_bot.next_to(axes_bot, DOWN, buff=0.35)
+        sub_bot.next_to(axes_bot, UP, buff=0.18)
         self.play(FadeIn(title), FadeIn(sub_top), FadeIn(sub_bot))
 
         # Ticks and time variables
@@ -749,6 +748,7 @@ class ChapmanKolmogorovConsistency(Scene):
                 lbl_u = Tex(r'$u$').scale(0.6).set_color(BLACK)
                 lbl_u.move_to([ax.c2p(u, -3)[0], tick_u.get_bottom()[1] - 0.15, 0])
                 self.add(tick_u, lbl_u)
+        # Add ticks and labels already drawn
         add_ticks(axes_top, True)
         add_ticks(axes_bot, True)
 
@@ -799,19 +799,17 @@ class ChapmanKolmogorovConsistency(Scene):
         # Top: one arrow and one column at u (display position u, actual time u_actual)
         # Start with a larger black dot at s
         dot_top_s = Dot(axes_top.c2p(s, x_s), color=BLACK, radius=0.06)
-        self.play(FadeIn(dot_top_s))
+        self.add(dot_top_s)
         
         arr_top = CurvedArrow(axes_top.c2p(s, 0.0), axes_top.c2p(u-0.03, 0.0), angle=-0.7, color=BLUE, stroke_width=5)
         arr_top.set(stroke_cap=CapStyleType.SQUARE)
         xs_top = sample_one_step(u_actual - s_actual, N_VIS, lam.get_value())
         dots_top_u = VGroup(*[Dot(axes_top.c2p(u, y), color=BLUE, radius=0.032) for y in xs_top])
-        self.play(Create(arr_top))
-        self.play(LaggedStart(*[FadeIn(d) for d in dots_top_u], lag_ratio=0.05, run_time=0.7))
-
+        
         # Bottom: two arrows and two columns at t and u (display positions, actual times)
         # Start with a larger black dot at s
         dot_bot_s = Dot(axes_bot.c2p(s, x_s), color=BLACK, radius=0.06)
-        self.play(FadeIn(dot_bot_s))
+        self.add(dot_bot_s)
         
         arr_b1 = CurvedArrow(axes_bot.c2p(s, 0.0), axes_bot.c2p(t-0.02, 0.0), angle=+0.8, color=RED, stroke_width=5)
         arr_b2 = CurvedArrow(axes_bot.c2p(t, 0.0), axes_bot.c2p(u-0.03, 0.0), angle=+0.8, color=RED, stroke_width=5)
@@ -820,10 +818,15 @@ class ChapmanKolmogorovConsistency(Scene):
         xt, xu = sample_two_step(u_actual - s_actual, N_VIS, lam.get_value())
         dots_bot_t = VGroup(*[Dot(axes_bot.c2p(t, y), color=RED, radius=0.03) for y in xt])
         dots_bot_u = VGroup(*[Dot(axes_bot.c2p(u, y), color=RED, radius=0.032) for y in xu])
-        # First: t arrow and t samples
+        
+        # Fade in one-step and two-step elements immediately
+        # Top panel animations
+        self.play(Create(arr_top))
+        self.play(LaggedStart(*[FadeIn(d) for d in dots_top_u], lag_ratio=0.05, run_time=0.5))
+        
+        # Bottom panel animations
         self.play(Create(arr_b1))
         self.play(LaggedStart(*[FadeIn(d) for d in dots_bot_t], lag_ratio=0.05, run_time=0.5))
-        # Then: u arrow and u samples
         self.play(Create(arr_b2))
         self.play(LaggedStart(*[FadeIn(d) for d in dots_bot_u], lag_ratio=0.05, run_time=0.5))
         self.wait(0.4)
@@ -940,7 +943,7 @@ class ChapmanKolmogorovConsistency(Scene):
         # Position text to the right of the arrow
         match_txt.next_to(comp_arrow, RIGHT, buff=0.25)
         
-        self.play(Create(comp_arrow), FadeIn(match_txt))
+        self.play(FadeIn(comp_arrow), FadeIn(match_txt))
         self.wait(1.0)
 
 
