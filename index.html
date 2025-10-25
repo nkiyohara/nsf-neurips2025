@@ -1,451 +1,684 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- Primary Meta Tags -->
-  <!-- TODO: Replace with your paper title and author names -->
-  <meta name="title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions - Naoki Kiyohara, Edward Johns, Yingzhen Li">
-  <!-- TODO: Write a compelling 150-160 character description of your research -->
-  <meta name="description" content="Neural Stochastic Flows learn SDE transition laws via conditional normalizing flows, enabling solver-free, accurate, one-step sampling with up to 100× speedups.">
-  <!-- TODO: Add 5-10 relevant keywords for your research area -->
-  <meta name="keywords" content="stochastic differential equations, normalizing flows, time series, probabilistic forecasting, state-space models, diffusion models, solver-free inference, Chapman-Kolmogorov">
-  <!-- TODO: List all authors -->
-  <meta name="author" content="Naoki Kiyohara, Edward Johns, Yingzhen Li">
-  <meta name="robots" content="index, follow">
-  <meta name="language" content="English">
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="article">
-  <!-- TODO: Replace with your institution or lab name -->
-  <meta property="og:site_name" content="Imperial College London">
-  <!-- TODO: Same as paper title above -->
-  <meta property="og:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions">
-  <!-- TODO: Same as description above -->
-  <meta property="og:description" content="Neural Stochastic Flows learn SDE transition laws via conditional normalizing flows, enabling solver-free, accurate, one-step sampling with up to 100× speedups.">
-  <meta property="og:url" content="https://nkiyohara.github.io/nsf-neurips2025">
-  <meta property="og:image" content="https://nkiyohara.github.io/nsf-neurips2025/static/images/social_preview.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Neural Stochastic Flows - Research Preview">
-  <meta property="article:published_time" content="2025-09-23T15:40:42.000Z">
-  <meta property="article:author" content="Naoki Kiyohara">
-  <meta property="article:section" content="Research">
-  <meta property="article:tag" content="stochastic differential equations">
-  <meta property="article:tag" content="normalizing flows">
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <!-- TODO: Replace with your lab/institution Twitter handle -->
-  <meta name="twitter:site" content="@YOUR_TWITTER_HANDLE">
-  <!-- TODO: Replace with first author's Twitter handle -->
-  <meta name="twitter:creator" content="@AUTHOR_TWITTER_HANDLE">
-  <!-- TODO: Same as paper title above -->
-  <meta name="twitter:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions">
-  <!-- TODO: Same as description above -->
-  <meta name="twitter:description" content="Neural Stochastic Flows learn SDE transition laws via conditional normalizing flows, enabling solver-free, accurate, one-step sampling with up to 100× speedups.">
-  <meta name="twitter:image" content="https://nkiyohara.github.io/nsf-neurips2025/static/images/social_preview.png">
-  <meta name="twitter:image:alt" content="Neural Stochastic Flows - Research Preview">
-
-  <!-- Academic/Research Specific -->
-  <meta name="citation_title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions">
-  <meta name="citation_author" content="Kiyohara, Naoki">
-  <meta name="citation_author" content="Johns, Edward">
-  <meta name="citation_author" content="Li, Yingzhen">
-  <meta name="citation_publication_date" content="2025">
-  <meta name="citation_conference_title" content="Neural Information Processing Systems (NeurIPS)">
-  <meta name="citation_pdf_url" content="paper.pdf">
-  
-  <!-- Additional SEO -->
-  <meta name="theme-color" content="#2563eb">
-  <meta name="msapplication-TileColor" content="#2563eb">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  
-  <!-- Preconnect for performance -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions</title>
+  <meta name="description" content="Neural Stochastic Flows learn solver-free transition densities for stochastic differential equations using conditional normalising flows and flow-consistency regularisation." />
+  <meta property="og:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions" />
+  <meta property="og:description" content="Solver-free modelling and inference for SDE solutions with conditional normalising flows." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="static/teaser.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://ajax.googleapis.com">
-  <link rel="preconnect" href="https://documentcloud.adobe.com">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-
-
-  <!-- TODO: Replace with your paper title and authors -->
-  <title>Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions - Kiyohara, Johns, Li | Academic Research</title>
-  
-  <!-- Favicon and App Icons -->
-  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
-  <link rel="apple-touch-icon" href="static/images/favicon.ico">
-  
-  <!-- Critical CSS - Load synchronously -->
-  <link rel="stylesheet" href="static/css/bulma.min.css">
-  <link rel="stylesheet" href="static/css/index.css">
-  
-  <!-- Non-critical CSS - Load asynchronously -->
-  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  
-  <!-- Fallback for browsers that don't support preload -->
-  <noscript>
-    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
-    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
-    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  </noscript>
-  
-  <!-- Fonts - Optimized loading -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Defer non-critical JavaScript -->
-  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script defer src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
-  <script defer src="static/js/fontawesome.all.min.js"></script>
-  <script defer src="static/js/bulma-carousel.min.js"></script>
-  <script defer src="static/js/bulma-slider.min.js"></script>
-  <script defer src="static/js/index.js"></script>
-  
-  <!-- Structured Data for Academic Papers -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "ScholarlyArticle",
-    "headline": "Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions",
-    "description": "Neural Stochastic Flows learn SDE transition laws via conditional normalizing flows, enabling solver-free, accurate, one-step sampling with up to 100× speedups.",
-    "author": [
-      {
-        "@type": "Person",
-        "name": "Naoki Kiyohara",
-        "affiliation": {
-          "@type": "Organization",
-          "name": "Imperial College London; Canon Inc."
-        }
-      },
-      {
-        "@type": "Person",
-        "name": "Edward Johns",
-        "affiliation": {
-          "@type": "Organization",
-          "name": "Imperial College London"
-        }
-      },
-      {
-        "@type": "Person",
-        "name": "Yingzhen Li",
-        "affiliation": {
-          "@type": "Organization",
-          "name": "Imperial College London"
-        }
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --maxw: 980px;
+      --radius: 18px;
+      --bg:#0b0c0f;
+      --bg-alt:#0e1117;
+      --panel:#12141a;
+      --text:#e9ecf1;
+      --muted:#aab3c4;
+      --link:#90caf9;
+      --accent:#b4ff39;
+      --ink-on-accent:#0b0c0f;
+      --border:#232733;
+      --ghost-border:#2b2f3a;
+      --code-bg:#0a0c11;
+      --code-fg:#e9ecf1;
+      color-scheme: light dark;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f8fafc;
+        --bg-alt:#eef2f7;
+        --panel:#ffffff;
+        --text:#0b1220;
+        --muted:#5b667a;
+        --link:#1d4ed8;
+        --accent:#3BD16F;
+        --ink-on-accent:#001510;
+        --border:#e5e7eb;
+        --ghost-border:#d0d4dd;
+        --code-bg:#f3f4f6;
+        --code-fg:#0b1220;
       }
-    ],
-    "datePublished": "2025-09-23",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Neural Information Processing Systems (NeurIPS)"
-    },
-    "url": "https://nkiyohara.github.io/nsf-neurips2025",
-    "image": "https://nkiyohara.github.io/nsf-neurips2025/static/images/social_preview.png",
-    "keywords": ["stochastic differential equations", "normalizing flows", "time series", "probabilistic forecasting", "state-space models", "diffusion models", "solver-free inference"],
-    "abstract": "Stochastic differential equations (SDEs) are well suited to modelling noisy and/or irregularly-sampled time series, which are omnipresent in finance, physics, and machine learning applications. Traditional approaches require costly simulation of numerical solvers when sampling between arbitrary time points. We introduce neural stochastic flows (NSF) and their latent dynamic versions, which learn (latent) SDE transition laws directly using conditional normalising flows, with architectural constraints that preserve properties inherited from stochastic flow. This enables sampling between arbitrary states in a single step, providing up to two orders of magnitude speedup for distant time points. Experiments on synthetic SDE simulations and real-world tracking and video data demonstrate that NSF maintains distributional accuracy comparable to numerical approaches while dramatically reducing computation for arbitrary time-point sampling.",
-    "citation": "@inproceedings{kiyohara2025nsf, title={Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions}, author={Kiyohara, Naoki and Johns, Edward and Li, Yingzhen}, booktitle={Advances in Neural Information Processing Systems}, year={2025} }",
-    "isAccessibleForFree": true,
-    "license": "https://creativecommons.org/licenses/by/4.0/",
-    "mainEntity": {
-      "@type": "WebPage",
-      "@id": "https://nkiyohara.github.io/nsf-neurips2025"
-    },
-    "about": [
-      {
-        "@type": "Thing",
-        "name": "stochastic differential equations"
-      },
-      {
-        "@type": "Thing", 
-        "name": "normalizing flows"
-      }
-    ]
-  }
+    }
+    html[data-theme="light"]{
+      --bg:#f8fafc; --bg-alt:#eef2f7; --panel:#ffffff; --text:#0b1220; --muted:#5b667a;
+      --link:#1d4ed8; --accent:#3BD16F; --ink-on-accent:#001510; --border:#e5e7eb; --ghost-border:#d0d4dd;
+      --code-bg:#f3f4f6; --code-fg:#0b1220;
+    }
+    html[data-theme="dark"]{
+      --bg:#0b0c0f; --bg-alt:#0e1117; --panel:#12141a; --text:#e9ecf1; --muted:#aab3c4;
+      --link:#90caf9; --accent:#b4ff39; --ink-on-accent:#0b0c0f; --border:#232733; --ghost-border:#2b2f3a;
+      --code-bg:#0a0c11; --code-fg:#e9ecf1;
+    }
+
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:linear-gradient(180deg, var(--bg), var(--bg-alt));
+      -webkit-font-smoothing:antialiased;
+      line-height:1.6;
+    }
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:28px 18px 72px;}
+    header.hero{display:flex; flex-direction:column; gap:14px; align-items:center; text-align:center;}
+    .title{font-size:clamp(28px,4.2vw,44px); line-height:1.1; font-weight:800; letter-spacing:-0.02em;}
+    .title br{display:none;}
+    @media (min-width: 640px){.title br{display:block;}}
+    .subtitle{font-size:clamp(16px,2vw,20px); color:var(--muted);}
+    .cta{display:flex; flex-wrap:wrap; gap:12px; margin-top:6px;}
+    .btn{display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:10px 16px; font-weight:600; text-decoration:none;}
+    .btn.primary{background:var(--accent); color:var(--ink-on-accent);}
+    .btn.ghost{border:1px solid var(--ghost-border); color:var(--text);}
+    .btn.disabled,
+    .btn[aria-disabled="true"]{opacity:0.55; pointer-events:none;}
+    .authors{display:flex; flex-wrap:wrap; justify-content:center; gap:10px 16px; font-size:15px;}
+    .authors a{color:var(--link); text-decoration:none;}
+    .affil{color:var(--muted);}
+    .venue{font-size:15px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin-top:-4px;}
+    .abstract-section{margin-top:28px;}
+    .abstract-card{
+      position:relative;
+      padding:28px 26px;
+      border-radius:calc(var(--radius) + 4px);
+      border:1px solid var(--border);
+      border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      background:linear-gradient(135deg, var(--panel), var(--panel));
+      background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel));
+      box-shadow:0 18px 40px rgba(0,0,0,0.14);
+      overflow:hidden;
+    }
+    .abstract-card::before{
+      content:"";
+      position:absolute;
+      inset:-120px 40% auto -80px;
+      height:220px;
+      border-radius:70%;
+      background: radial-gradient(circle at center, color-mix(in srgb, var(--accent) 40%, transparent) 0%, transparent 70%);
+      opacity:0.6;
+      pointer-events:none;
+      filter:blur(4px);
+      z-index:0;
+    }
+    .abstract-card > *{position:relative; z-index:1;}
+    .abstract-card h2{
+      margin:0;
+      font-size:15px;
+      letter-spacing:0.16em;
+      text-transform:uppercase;
+      color:var(--accent);
+    }
+    .abstract-card p{
+      margin:14px 0 0;
+      font-size:15.5px;
+    }
+    section{margin-top:36px;}
+    .panel{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:22px;}
+    h2{margin:0 0 12px; font-size:clamp(20px,2.8vw,26px); letter-spacing:-0.01em;}
+    p{margin:10px 0;}
+    a{color:var(--link);}
+    .two{display:grid; grid-template-columns:1.1fr 0.9fr; gap:18px; align-items:start;}
+    @media (max-width: 860px){.two{grid-template-columns:1fr;}}
+    .video-frame{border-radius:14px; overflow:hidden; border:1px solid var(--border); background:var(--panel);}
+    .video-frame video{display:block; width:100%; height:auto; background:var(--panel);}
+    .video-frame figcaption{margin:12px 14px 0; padding-bottom:12px; font-size:14px; color:var(--muted);}
+    .video-pair{display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:16px;}
+    @media (max-width: 720px){.video-pair{grid-template-columns:1fr;}}
+    .video-pair figure{margin:0; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--panel);}
+    .video-pair video{display:block; width:100%; height:auto; background:var(--panel);}
+    .video-pair figcaption{margin:0; padding:12px 14px; font-size:14px; color:var(--muted);}
+    figure{margin:0;}
+    figcaption{margin-top:8px; font-size:14px; color:var(--muted);}
+    .video-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:18px;}
+    @media (max-width: 720px){.video-grid{grid-template-columns:1fr;}}
+    .video-card{border:1px solid var(--border); border-radius:16px; padding:16px; background:var(--panel);}
+    .video-card video{width:100%; border-radius:12px; background:var(--panel);}
+    .video-card h3{margin:12px 0 6px; font-size:18px;}
+    .video-card p{margin:0; font-size:14px; color:var(--muted);}
+    .checks{list-style:none; padding:0; margin:14px 0;}
+    .checks li{display:flex; flex-direction:column; gap:6px; margin-bottom:12px;}
+    .checks li > span, .checks li > div, .checks li > p{margin:0;}
+    .check{display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; border:1px solid var(--accent); color:var(--accent); font-size:12px; margin-top:2px; flex-shrink:0;}
+    .check-line{display:flex; align-items:flex-start; gap:10px;}
+    .math-block{margin:4px 0 0;}
+    h3{margin:18px 0 10px; font-size:20px;}
+    .result-block{margin-top:24px;}
+    .image-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin:16px 0;}
+    .image-grid figure{border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--panel); padding:12px;}
+    .image-grid img{width:100%; height:auto; display:block; border-radius:8px;}
+    .result-figure{margin:20px 0; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--panel); padding:16px;}
+    .result-figure img{width:100%; height:auto; display:block;}
+    .result-figure.small{max-width:480px; margin-left:auto; margin-right:auto;}
+    .result-figure figcaption{margin-top:10px; font-size:13px; color:var(--muted); text-align:center;}
+    .note-card{border:1px solid var(--border); border-radius:12px; padding:18px; background:color-mix(in srgb, var(--panel) 94%, var(--accent) 6%);}
+    .note-card p{margin:8px 0; font-size:14.5px;}
+    .flow-list{margin:16px 0 0; padding-left:18px;}
+    .flow-list li{margin-bottom:14px; display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:flex-start;}
+    .flow-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:30px;
+      height:30px;
+      border-radius:999px;
+      font-size:13px;
+      color:var(--ink-on-accent);
+      background:var(--accent);
+      font-weight:600;
+      margin-top:2px;
+    }
+    .flow-list strong{display:block; margin-bottom:4px; font-size:15px;}
+    .flow-list p{margin:4px 0; font-size:14.5px;}
+    .flow-list .table-note{margin:6px 0 0; font-size:14.5px; color:color-mix(in srgb, var(--accent) 70%, var(--text)); font-weight:600;}
+    .result-table{width:100%; border-collapse:collapse; font-size:13px; margin:12px 0;}
+    .result-table caption{caption-side:top; text-align:left; font-weight:600; margin-bottom:6px;}
+    .result-table th, .result-table td{border:1px solid var(--border); padding:8px 10px; text-align:center;}
+    .result-table th{background:rgba(255,255,255,0.02); font-weight:600;}
+    .result-table td:first-child, .result-table th:first-child{text-align:left;}
+    .table-note{font-size:12px; color:var(--muted); margin-top:4px;}
+    .method-group{font-weight:600;}
+    .subrow{padding-left:16px;}
+    pre{background:var(--code-bg); color:var(--code-fg); border:1px solid var(--border); border-radius:14px; padding:14px; overflow:auto; font-size:13px;}
+    footer{margin-top:40px; color:var(--muted); font-size:14px;}
+    .fine{opacity:.9;}
+
+    /* --- Results accordion --- */
+    .results-accordion details{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      margin:12px 0;
+      overflow:hidden;
+    }
+    .results-accordion summary{
+      list-style:none;
+      cursor:pointer;
+      padding:16px 18px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      user-select:none;
+    }
+    .results-accordion summary::-webkit-details-marker{ display:none; }
+
+    .results-accordion .summary-left{
+      display:flex; align-items:center; gap:10px;
+      font-size:16px; letter-spacing:-0.01em;
+    }
+    .results-accordion .summary-right{
+      font-size:12px; color:var(--muted);
+    }
+
+    .results-accordion .chev{
+      width:20px; height:20px; border:1px solid var(--ghost-border);
+      border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+      font-size:12px; flex-shrink:0;
+    }
+    .results-accordion details[open] .chev{ transform:rotate(90deg); }
+
+    .results-accordion .panel-inner{ padding:0 18px 18px; }
+
+    /* 「結果」内の既存カードとの余白調整 */
+    .results-accordion .result-block{ margin:0; border:none; padding:0; }
+    .results-accordion .result-block > *:first-child{ margin-top:0; }
+    .results-accordion .result-block > *:last-child{ margin-bottom:0; }
+
+    /* 展開/折りたたみ 全部ボタン */
+    .results-toolbar{
+      display:flex; gap:10px; justify-content:flex-end; margin:8px 0 12px;
+    }
+    .results-toolbar .btn.small{
+      padding:8px 12px; font-size:13px; border-radius:999px;
+      border:1px solid var(--ghost-border); text-decoration:none; color:var(--text);
+      background:transparent; cursor:pointer;
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: {inlineMath: [["$", "$"], ["\\(", "\\)"]], displayMath: [["$$","$$"], ["\\[","\\]"]]},
+      svg: {fontCache: "global"}
+    };
   </script>
-  
-  <!-- Website/Organization Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Imperial College London",
-    "url": "https://www.imperial.ac.uk",
-    "logo": "https://nkiyohara.github.io/nsf-neurips2025/static/images/favicon.ico",
-    "sameAs": [
-      "https://twitter.com/YOUR_TWITTER_HANDLE",
-      "https://github.com/YOUR_GITHUB_USERNAME"
-    ]
-  }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+  <meta name="color-scheme" content="dark light" />
 </head>
 <body>
+  <div class="wrap">
+    <header class="hero">
+      <h1 class="title">Neural Stochastic Flows: <br>Solver-Free Modelling and Inference for SDE Solutions</h1>
+      <p class="venue">NeurIPS 2025</p>
+      <div class="authors">
+        <span><a href="https://nkiyohara.github.io/" target="_blank" rel="noopener">Naoki Kiyohara</a><sup>1,2</sup></span>
+        <span><a href="https://www.robot-learning.uk/people" target="_blank" rel="noopener">Edward Johns</a><sup>1</sup></span>
+        <span><a href="https://yingzhenli.net" target="_blank" rel="noopener">Yingzhen Li</a><sup>1</sup></span>
+        <span class="affil">&nbsp;&nbsp;(<sup>1</sup>Imperial College London, <sup>2</sup>Canon Inc.)</span>
+      </div>
+      <div class="cta">
+        <a class="btn primary disabled" href="#" aria-disabled="true">📄 Paper (Coming soon)</a>
+        <a class="btn ghost" href="https://github.com/nkiyohara/jax_nsf" target="_blank" rel="noopener">💻 Code (GitHub)</a>
+      </div>
+    </header>
 
+    <section id="abstract" class="abstract-section">
+      <div class="abstract-card">
+        <h2>Abstract</h2>
+        <p>Stochastic differential equations (SDEs) are well suited to modelling noisy and/or irregularly-sampled time series, which are omnipresent in finance, physics, and machine learning applications. Traditional approaches require costly simulation of numerical solvers when sampling between arbitrary time points. We introduce Neural Stochastic Flows (NSFs) and their latent dynamic versions, which learns (latent) SDE transition laws directly using conditional normalising flows, with architectural constraints that preserve properties inherited from stochastic flow. This enables sampling between arbitrary states in a single step, providing up to two orders of magnitude speedup for distant time points. Experiments on synthetic SDE simulations and real-world tracking and video data demonstrate that NSF maintains distributional accuracy comparable to numerical approaches while dramatically reducing computation for arbitrary time-point sampling, enabling applications where numerical solvers remain prohibitively expensive.</p>
+      </div>
+    </section>
 
-  <!-- Scroll to Top Button -->
-  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
-    <i class="fas fa-chevron-up"></i>
-  </button>
+    <section id="motivation">
+      <div class="panel">
+        <h2>Motivation: Solver-Free SDEs</h2>
+        <div class="two">
+          <div>
+            <p>Stochastic differential equations capture the noisy dynamics of robotics, finance, climate systems, and modern generative models. Real deployments demand forecasts across arbitrary gaps, and evaluations must remain fast enough for control or analysis loops.</p>
+            <p>Solver-based neural SDEs approximate these transitions by threading hundreds of Euler–Maruyama steps, so the cost grows linearly with the horizon. This makes long-range or densely queried predictions difficult to deploy.</p>
+            <p>Neural Stochastic Flows side-step numerical integration by learning the transition density $p_\theta(x_t \mid x_s; \Delta t)$ in a single pass. The animation on the right shows the solver baseline we replace; the sections below explain how NSF keeps the expressivity of stochastic dynamics without the iterative burden.</p>
+          </div>
+          <figure class="video-frame">
+            <video controls playsinline preload="metadata">
+              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm" media="(prefers-color-scheme: dark)">
+              <source src="scripts/media/videos/light/videos/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm" media="(prefers-color-scheme: light)">
+              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4" media="(prefers-color-scheme: dark)">
+              <source src="scripts/media/videos/light/videos/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4" media="(prefers-color-scheme: light)">
+              <source src="scripts/media/videos/light/videos/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+            <figcaption>NSF collapses ensembles into calibrated conditional densities without iterative solvers.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
 
+    <section id="architecture">
+      <div class="panel">
+        <h2>Neural Stochastic Flow Architecture</h2>
+        <div class="two">
+          <div>
+            <p>NSFs approximate the weak solution $p_\theta(x_t \mid x_s; s, t - s)$ by transforming Gaussian noise through conditional coupling flows. The architecture encodes the elapsed time $\Delta t$ explicitly so that transformations collapse to the identity as $\Delta t \to 0$, preserving the identity and Markov properties inherited from stochastic flows.</p>
+            <ul>
+              <li>State-dependent Gaussian initialisation mirrors the Euler–Maruyama update with drift scaled by $\Delta t$ and diffusion scaled by $\sqrt{\Delta t}$.</li>
+              <li>Affine coupling layers modulate their effect with $\Delta t$, ensuring bijectivity and closed-form log-densities for likelihood-based learning.</li>
+              <li>Conditioning on $(x_s, \Delta t, s)$ supports autonomous and non-autonomous SDEs while enabling direct evaluation of transition densities.</li>
+            </ul>
+          </div>
+          <div class="note-card">
+            <p><strong>Sampling recipe.</strong> Draw $\varepsilon \sim \mathcal{N}(0, I)$ and initialise</p>
+            <p>$$z = x_s + \Delta t\, \mu_\theta(x_s, s, \Delta t) + \sqrt{\Delta t}\, \sigma_\theta(x_s, s, \Delta t) \odot \varepsilon,$$</p>
+            <p>then apply stacked coupling flows $x_t = f_\theta(z; x_s, s, \Delta t)$, whose learnable parameters vanish as $\Delta t \to 0$.</p>
+            <p>This guarantees identity and Markov consistency while keeping the log-Jacobian available for likelihood training.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <main id="main-content">
-  <section class="hero">
-    <div class="hero-body">
-      <div class="container is-max-desktop">
-        <div class="columns is-centered">
-          <div class="column has-text-centered">
-            <h1 class="title is-1 publication-title">Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions</h1>
-            <div class="is-size-5 publication-authors">
-              <span class="author-block">
-                <a href="https://nkiyohara.github.io" target="_blank">Naoki Kiyohara</a><sup>1,2</sup>,</span>
-                <span class="author-block">
-                  <a href="https://www.robot-learning.uk" target="_blank">Edward Johns</a><sup>1</sup>,</span>
-                  <span class="author-block">
-                    <a href="http://yingzhenli.net/" target="_blank">Yingzhen Li</a><sup>1</sup>
-                  </span>
-                  </div>
-
-                  <div class="is-size-5 publication-authors">
-                    <span class="author-block"><sup>1</sup>Imperial College London &nbsp;&nbsp; <sup>2</sup>Canon Inc.<br>NeurIPS 2025</span>
-                  </div>
-
-                  <div class="column has-text-centered">
-                    <div class="publication-links">
-                      <span class="link-block">
-                        <a href="paper.pdf" target="_blank"
-                        class="external-link button is-normal is-rounded is-dark">
-                        <span class="icon">
-                          <i class="fas fa-file-pdf"></i>
-                        </span>
-                        <span>Paper</span>
-                      </a>
-                    </span>
-
-                  <!-- TODO: Replace with your GitHub repository URL -->
-                  <span class="link-block">
-                    <a href="https://github.com/YOUR REPO HERE" target="_blank"
-                    class="external-link button is-normal is-rounded is-dark">
-                    <span class="icon">
-                      <i class="fab fa-github"></i>
-                    </span>
-                    <span>Code</span>
-                  </a>
-                </span>
-
+    <section id="flow-properties">
+      <div class="panel">
+        <h2>Conditions from Stochastic Flows</h2>
+        <p>Following the derivation in the paper, Neural Stochastic Flows inherit the axioms of stochastic flows when viewed as weak solutions. The learned transition density $p_\theta(x_t \mid x_s; s, \Delta t)$ is trained to satisfy:</p>
+        <ol class="flow-list">
+          <li>
+            <span class="flow-badge">1</span>
+            <div>
+              <strong>Independence.</strong>
+              <p>For any $0 \le t_1 \le \dots \le t_n$, the conditionals $p_\theta(x_{t_{k+1}}\mid x_{t_k}; t_k, t_{k+1}-t_k)$ are mutually independent.</p>
+              <p class="table-note">Realised by the architecture: each transition conditions only on $(x_s, s, \Delta t)$ and draws independent Gaussian noise, matching the independence assumption in the paper.</p>
             </div>
+          </li>
+          <li>
+            <span class="flow-badge">2</span>
+            <div>
+              <strong>Identity.</strong>
+              <p>Evaluating at zero gap recovers the input state: $p_\theta(x_t \mid x_s; s, 0) = \delta(x_t - x_s)$.</p>
+              <p class="table-note">Realised by the architecture: every coupling layer carries an explicit $\Delta t$ factor so the transformation collapses to the identity as $\Delta t\to 0$.</p>
+            </div>
+          </li>
+          <li>
+            <span class="flow-badge">3</span>
+            <div>
+              <strong>Chapman–Kolmogorov (Flow property).</strong>
+              <div class="math-block">
+                \[
+                p_\theta(x_{t_k} \mid x_{t_i}; t_i, t_k - t_i) = \int p_\theta(x_{t_k} \mid x_{t_j}; t_j, t_k - t_j)\, p_\theta(x_{t_j} \mid x_{t_i}; t_i, t_j - t_i)\,\mathrm{d}x_{t_j}.
+                \]
+              </div>
+              <p class="table-note">Shaped by the bidirectional flow regulariser introduced in <a href="#flow-consistency">Flow Consistency Regularisation</a>.</p>
+            </div>
+          </li>
+          <li>
+            <span class="flow-badge">4</span>
+            <div>
+              <strong>Stationarity (autonomous SDEs).</strong>
+              <p>When the underlying SDE is time-homogeneous, $p_\theta(x_{t_j}\mid x_s; t_i, t_j - t_i)$ depends on the gap only: $p_\theta(x_{t_j}\mid x_s; t_i, t_j - t_i)=p_\theta(x_{t_j+r}\mid x_s; t_i + r, t_j - t_i)$.</p>
+              <p class="table-note">Realised by the architecture: for autonomous SDEs we drop the absolute time $t_i$ from the conditioner so the transition depends only on the gap.</p>
+            </div>
+          </li>
+        </ol>
+        <p>The conditional flow operator remains available in closed form,
+          $$p_\theta(x_t \mid x_s; s, \Delta t)=\int \delta\bigl(x_t - f_\theta(x_s, s, \Delta t, \varepsilon)\bigr)\,\mathcal{N}(\varepsilon; 0, I)\,\mathrm{d}\varepsilon,$$
+          which enables likelihood-based training and solver-free sampling.</p>
+      </div>
+    </section>
+
+    <section id="flow-consistency">
+      <div class="panel">
+        <h2>Flow Consistency Regularisation</h2>
+        <div class="two">
+          <div>
+            <p>To guarantee that recursive application of NSF matches its one-step predictions, we optimise a bidirectional KL flow loss that enforces the Chapman–Kolmogorov property. An auxiliary bridge distribution provides tractable variational bounds, so training balances coverage (forward KL) and sharpness (reverse KL) without resorting to expensive sampling.</p>
+            <p>Because every transformation is invertible, the transition log-density remains available in closed form, enabling joint optimisation of likelihood and flow consistency.</p>
           </div>
+          <figure class="video-frame">
+            <video controls playsinline preload="metadata">
+              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm" media="(prefers-color-scheme: dark)">
+              <source src="scripts/media/videos/light/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm" media="(prefers-color-scheme: light)">
+              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4" media="(prefers-color-scheme: dark)">
+              <source src="scripts/media/videos/light/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4" media="(prefers-color-scheme: light)">
+              <source src="scripts/media/videos/light/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+            <figcaption>Flow-consistency loss matches one-step and two-step transitions through a shared bridge distribution.</figcaption>
+          </figure>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-
-<!-- Teaser video-->
-<section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <!-- TODO: Replace with your teaser video -->
-      <video poster="" id="tree" autoplay controls muted loop height="100%" preload="metadata">
-        <!-- TODO: Add your video file path here -->
-        <source src="static/videos/banner_video.mp4" type="video/mp4">
-      </video>
-      <!-- TODO: Replace with your video description -->
-      <h2 class="subtitle has-text-centered">
-        Aliquam vitae elit ullamcorper tellus egestas pellentesque. Ut lacus tellus, maximus vel lectus at, placerat pretium mi. Maecenas dignissim tincidunt vestibulum. Sed consequat hendrerit nisl ut maximus. 
-      </h2>
-    </div>
-  </div>
-</section>
-<!-- End teaser video -->
-
-<!-- Paper abstract -->
-<section class="section hero is-light">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <!-- TODO: Replace with your paper abstract -->
-          <p>
-            Stochastic differential equations (SDEs) are well suited to modelling noisy and/or irregularly-sampled time series, which are omnipresent in finance, physics, and machine learning applications. Traditional approaches require costly simulation of numerical solvers when sampling between arbitrary time points. We introduce neural stochastic flows (NSF) and their latent dynamic versions, which learn (latent) SDE transition laws directly using conditional normalising flows, with architectural constraints that preserve properties inherited from stochastic flow. This enables sampling between arbitrary states in a single step, providing up to two orders of magnitude speedup for distant time points. Experiments on synthetic SDE simulations and real-world tracking and video data demonstrate that NSF maintains distributional accuracy comparable to numerical approaches while dramatically reducing computation for arbitrary time-point sampling, enabling applications where numerical solvers remain prohibitively expensive.
-          </p>
+    <section id="latent">
+      <div class="panel">
+        <h2>Latent Neural Stochastic Flows</h2>
+        <p>Real-world observations are often partial and irregular in time. Latent NSFs embed NSFs inside a variational state-space model: the latent transition kernel is solver-free and conditioned on $\Delta t$, while encoders and decoders handle noisy measurements. Skip-KL objectives compare multi-step NSF rollouts with amortised posteriors so that inference remains calibrated across varying gaps. This design inherits all NSF benefits (closed-form likelihoods and arbitrary-step sampling) within a probabilistic latent variable framework.</p>
+        <div class="image-grid">
+          <figure>
+            <img src="media/results/latent/vssm.svg" alt="Graphical model for a standard variational state-space model" loading="lazy" />
+            <figcaption>Standard VSSM: discrete-time latent transitions.</figcaption>
+          </figure>
+          <figure>
+            <img src="media/results/latent/latent_nsf.svg" alt="Graphical model for latent Neural Stochastic Flows" loading="lazy" />
+            <figcaption>Latent NSF: solver-free continuous-time transitions parameterised by $\Delta t$.</figcaption>
+          </figure>
+          <figure>
+            <img src="media/results/latent/skip_kl.svg" alt="Skip KL objective for latent Neural Stochastic Flows" loading="lazy" />
+            <figcaption>Skip-KL objective compares direct transitions with recursively generated ones.</figcaption>
+          </figure>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-<!-- End paper abstract -->
+    </section>
 
+    <section id="results">
+      <div class="panel">
+        <h2>Results</h2>
 
-<!-- Image carousel -->
-<section class="hero is-small">
-  <div class="hero-body">
-    <div class="container">
-      <div id="results-carousel" class="carousel results-carousel">
-       <div class="item">
-        <!-- TODO: Replace with your research result images -->
-        <img src="static/images/carousel1.jpg" alt="First research result visualization" loading="lazy"/>
-        <!-- TODO: Replace with description of this result -->
-        <h2 class="subtitle has-text-centered">
-          First image description.
-        </h2>
-      </div>
-      <div class="item">
-        <!-- Your image here -->
-        <img src="static/images/carousel2.jpg" alt="Second research result visualization" loading="lazy"/>
-        <h2 class="subtitle has-text-centered">
-          Second image description.
-        </h2>
-      </div>
-      <div class="item">
-        <!-- Your image here -->
-        <img src="static/images/carousel3.jpg" alt="Third research result visualization" loading="lazy"/>
-        <h2 class="subtitle has-text-centered">
-         Third image description.
-       </h2>
-     </div>
-     <div class="item">
-      <!-- Your image here -->
-      <img src="static/images/carousel4.jpg" alt="Fourth research result visualization" loading="lazy"/>
-      <h2 class="subtitle has-text-centered">
-        Fourth image description.
-      </h2>
-    </div>
-  </div>
-</div>
-</div>
-</section>
-<!-- End image carousel -->
+        <div class="results-toolbar">
+          <button class="btn small" type="button" onclick="toggleAll(true)">Expand all</button>
+          <button class="btn small" type="button" onclick="toggleAll(false)">Collapse all</button>
+        </div>
 
+        <div class="results-accordion">
 
+          <!-- 1) Stochastic Lorenz -->
+          <details id="lorenz">
+            <summary>
+              <span class="summary-left">
+                <span class="chev">›</span>
+                Stochastic Lorenz Attractor
+              </span>
+              <span class="summary-right">KL vs Compute • Figures & Table</span>
+            </summary>
+            <div class="panel-inner">
+              <div class="result-block">
+                <p>NSF matches the ground-truth attractor while remaining solver-free. Independent one-step samples stay on the correct manifold, unlike solver-based neural SDEs that either diffuse or collapse when rolled forward.</p>
+                <div class="image-grid">
+                  <figure>
+                    <img src="media/results/lorenz/lorenz_gt.png" alt="Ground-truth Lorenz trajectories" loading="lazy" />
+                    <figcaption>Ground truth samples</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="media/results/lorenz/lorenz_latentsde.png" alt="Latent SDE trajectories for Lorenz" loading="lazy" />
+                    <figcaption>Latent SDE baseline</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="media/results/lorenz/lorenz_sdematching.png" alt="SDE matching trajectories for Lorenz" loading="lazy" />
+                    <figcaption>SDE matching baseline</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="media/results/lorenz/lorenz_nsf1.png" alt="NSF trajectories for Lorenz" loading="lazy" />
+                    <figcaption>NSF (one-step)</figcaption>
+                  </figure>
+                </div>
+                <table class="result-table">
+                  <caption>KL divergence vs. compute on Lorenz (lower is better).</caption>
+                  <thead>
+                    <tr>
+                      <th rowspan="2">Method</th>
+                      <th colspan="2">t = 0.25</th>
+                      <th colspan="2">t = 0.5</th>
+                      <th colspan="2">t = 0.75</th>
+                      <th colspan="2">t = 1.0</th>
+                    </tr>
+                    <tr>
+                      <th>KL ↓</th><th>kFLOPs ↓</th>
+                      <th>KL ↓</th><th>kFLOPs ↓</th>
+                      <th>KL ↓</th><th>kFLOPs ↓</th>
+                      <th>KL ↓</th><th>kFLOPs ↓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Latent SDE (<a href="https://doi.org/10.48550/arXiv.2001.01328" target="_blank" rel="noopener">Li et&nbsp;al., 2020</a>)</td>
+                      <td>2.1 &plusmn; 0.9</td><td>959</td>
+                      <td>1.8 &plusmn; 0.1</td><td>1,917</td>
+                      <td>0.9 &plusmn; 0.3</td><td>2,839</td>
+                      <td>1.5 &plusmn; 0.5</td><td>3,760</td>
+                    </tr>
+                    <tr>
+                      <td>Neural LSDE (<a href="https://doi.org/10.48550/arXiv.2402.14989" target="_blank" rel="noopener">Oh et&nbsp;al., 2024</a>)</td>
+                      <td>1.3 &plusmn; 0.4</td><td>1,712</td>
+                      <td>7.2 &plusmn; 1.4</td><td>3,416</td>
+                      <td>74.5 &plusmn; 24.6</td><td>5,057</td>
+                      <td>53.1 &plusmn; 29.3</td><td>6,699</td>
+                    </tr>
+                    <tr>
+                      <td>Neural GSDE (<a href="https://doi.org/10.48550/arXiv.2402.14989" target="_blank" rel="noopener">Oh et&nbsp;al., 2024</a>)</td>
+                      <td>1.2 &plusmn; 0.4</td><td>1,925</td>
+                      <td>3.9 &plusmn; 0.3</td><td>3,848</td>
+                      <td>20.2 &plusmn; 7.6</td><td>5,698</td>
+                      <td>14.1 &plusmn; 8.4</td><td>7,548</td>
+                    </tr>
+                    <tr>
+                      <td>Neural LNSDE (<a href="https://doi.org/10.48550/arXiv.2402.14989" target="_blank" rel="noopener">Oh et&nbsp;al., 2024</a>)</td>
+                      <td>1.7 &plusmn; 0.4</td><td>1,925</td>
+                      <td>4.6 &plusmn; 0.7</td><td>3,848</td>
+                      <td>57.3 &plusmn; 16.4</td><td>5,698</td>
+                      <td>44.6 &plusmn; 23.4</td><td>7,548</td>
+                    </tr>
+                    <tr class="method-group">
+                      <td colspan="9">SDE matching (<a href="https://doi.org/10.48550/arXiv.2502.02472" target="_blank" rel="noopener">Bartosh et&nbsp;al., 2024</a>)</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">&Delta; t = 0.0001</td>
+                      <td>4.3 &plusmn; 0.7</td><td>184,394</td>
+                      <td>5.3 &plusmn; 1.0</td><td>368,787</td>
+                      <td>3.4 &plusmn; 0.8</td><td>553,034</td>
+                      <td>3.8 &plusmn; 1.0</td><td>737,354</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">&Delta; t = 0.01</td>
+                      <td>6.3 &plusmn; 0.4</td><td>1,917</td>
+                      <td>11.7 &plusmn; 0.5</td><td>3,834</td>
+                      <td>7.9 &plusmn; 0.3</td><td>5,677</td>
+                      <td>6.0 &plusmn; 0.3</td><td>7,520</td>
+                    </tr>
+                    <tr class="method-group">
+                      <td colspan="9">NSF (ours)</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">$ \mathcal{H}_{\mathrm{pred}} = 1.0$</td>
+                      <td>0.8 &plusmn; 0.7</td><td>53</td>
+                      <td>1.3 &plusmn; 0.1</td><td>53</td>
+                      <td>0.6 &plusmn; 0.3</td><td>53</td>
+                      <td>0.2 &plusmn; 0.6</td><td>53</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">$ \mathcal{H}_{\mathrm{pred}} = 0.5$</td>
+                      <td>2.4 &plusmn; 1.9</td><td>53</td>
+                      <td>1.3 &plusmn; 0.1</td><td>53</td>
+                      <td>1.0 &plusmn; 0.4</td><td>105</td>
+                      <td>1.7 &plusmn; 1.1</td><td>105</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">$ \mathcal{H}_{\mathrm{pred}} = 0.25$</td>
+                      <td>1.2 &plusmn; 0.7</td><td>53</td>
+                      <td>1.2 &plusmn; 0.1</td><td>105</td>
+                      <td>0.8 &plusmn; 0.4</td><td>156</td>
+                      <td>1.3 &plusmn; 0.8</td><td>208</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="table-note">Average runtime per 100 samples (JAX): latent SDE 124&ndash;148&nbsp;ms; NSF 0.3&nbsp;ms.</p>
+              </div>
+            </div>
+          </details>
 
+          <!-- 2) CMU Mocap -->
+          <details id="mocap">
+            <summary>
+              <span class="summary-left">
+                <span class="chev">›</span>
+                CMU Motion Capture
+              </span>
+              <span class="summary-right">Test MSE • Trade-off Plot</span>
+            </summary>
+            <div class="panel-inner">
+              <div class="result-block">
+                <p>Latent NSF delivers the strongest extrapolation accuracy while remaining orders of magnitude faster than solver-based latent SDEs. Setup&nbsp;1 evaluates within-horizon forecasting, and Setup&nbsp;2 withholds the final third of each sequence during training.</p>
+                <table class="result-table">
+                  <caption>Test MSE (95% confidence interval) on CMU Motion Capture.</caption>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Setup&nbsp;1</th>
+                      <th>Setup&nbsp;2</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>npODE (<a href="https://doi.org/10.48550/arXiv.1803.04303" target="_blank" rel="noopener">Heinonen et&nbsp;al., 2018</a>)</td><td>22.96<sup>†</sup></td><td>&mdash;</td></tr>
+                    <tr><td>Neural ODE (<a href="https://doi.org/10.48550/arXiv.1806.07366" target="_blank" rel="noopener">Chen et&nbsp;al., 2018</a>)</td><td>22.49 &plusmn; 0.88<sup>†</sup></td><td>&mdash;</td></tr>
+                    <tr><td>ODE2VAE-KL (<a href="https://doi.org/10.48550/arXiv.1905.10994" target="_blank" rel="noopener">Yildiz et&nbsp;al., 2019</a>)</td><td>8.09 &plusmn; 1.95<sup>†</sup></td><td>&mdash;</td></tr>
+                    <tr><td>Latent ODE (<a href="https://doi.org/10.48550/arXiv.1907.03907" target="_blank" rel="noopener">Rubanova et&nbsp;al., 2019</a>)</td><td>5.98 &plusmn; 0.28<sup>*</sup></td><td>31.62 &plusmn; 0.05<sup>§</sup></td></tr>
+                    <tr><td>Latent SDE (<a href="https://doi.org/10.48550/arXiv.2001.01328" target="_blank" rel="noopener">Li et&nbsp;al., 2020</a>)</td><td>12.91 &plusmn; 2.90<sup>♠</sup></td><td>9.52 &plusmn; 0.21<sup>§</sup></td></tr>
+                    <tr><td>Latent Approx SDE (<a href="https://doi.org/10.48550/arXiv.2110.15739" target="_blank" rel="noopener">Solin et&nbsp;al., 2021</a>)</td><td>7.55 &plusmn; 0.05<sup>§</sup></td><td>10.50 &plusmn; 0.86<sup>§</sup></td></tr>
+                    <tr><td>ARCTA (<a href="https://doi.org/10.48550/arXiv.2312.10550" target="_blank" rel="noopener">Course et&nbsp;al., 2023</a>)</td><td>7.62 &plusmn; 0.93<sup>‡</sup></td><td>9.92 &plusmn; 1.82</td></tr>
+                    <tr><td>NCDSSM (<a href="https://doi.org/10.48550/arXiv.2301.11308" target="_blank" rel="noopener">Ansari et&nbsp;al., 2023</a>)</td><td>5.69 &plusmn; 0.01<sup>§</sup></td><td>4.74 &plusmn; 0.01<sup>§</sup></td></tr>
+                    <tr><td>SDE matching (<a href="https://doi.org/10.48550/arXiv.2502.02472" target="_blank" rel="noopener">Bartosh et&nbsp;al., 2024</a>)</td><td><strong>5.20 &plusmn; 0.43</strong><sup>♣</sup></td><td>4.26 &plusmn; 0.35</td></tr>
+                    <tr><td>Latent NSF (ours)</td><td>8.62 &plusmn; 0.32</td><td><strong>3.41 &plusmn; 0.27</strong></td></tr>
+                  </tbody>
+                </table>
+                <p class="table-note">† reported by Yildiz et&nbsp;al. (2019); * reported by Rubanova et&nbsp;al. (2019); ‡ reported by Course et&nbsp;al. (2023); § reported by Ansari et&nbsp;al. (2023); ♠ our reproduction of Li et&nbsp;al. (2020) <span aria-hidden="true">&mdash;</span> code: <a href="https://github.com/nkiyohara/latent-sde-mocap" target="_blank" rel="noopener">latent-sde-mocap</a>; ♣ our reproduction of Bartosh et&nbsp;al. (2024) <span aria-hidden="true">&mdash;</span> code: <a href="https://github.com/nkiyohara/sde-matching-mocap" target="_blank" rel="noopener">sde-matching-mocap</a>.</p>
+                <p class="table-note">Runtime per 100 samples (JAX): latent SDE 75&nbsp;ms vs. Latent NSF 3.5&nbsp;ms.</p>
+                <figure class="result-figure">
+                  <img src="media/results/mocap_tradeoff.svg" alt="Runtime-accuracy trade-off on CMU Motion Capture" loading="lazy" />
+                  <figcaption>Latent NSF dominates the runtime/accuracy frontier on both forecasting (left) and extrapolation (right) protocols.</figcaption>
+                </figure>
+              </div>
+            </div>
+          </details>
 
-<!-- Youtube video -->
-<section class="hero is-small is-light">
-  <div class="hero-body">
-    <div class="container">
-      <!-- Paper video. -->
-      <h2 class="title is-3">Video Presentation</h2>
-      <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
-          
-          <div class="publication-video">
-            <!-- TODO: Replace with your YouTube video ID -->
-            <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
+          <!-- 3) Stochastic Moving MNIST -->
+          <details id="smmnist">
+            <summary>
+              <span class="summary-left">
+                <span class="chev">›</span>
+                Stochastic Moving MNIST
+              </span>
+              <span class="summary-right">FD Metrics • Grids</span>
+            </summary>
+            <div class="panel-inner">
+              <div class="result-block">
+                <p>On video forecasting, Latent NSF preserves appearance quality while modelling stochastic futures. One-step sampling excels on static structure, and recursive rollout remains competitive on dynamics.</p>
+                <table class="result-table">
+                  <caption>Fr&eacute;chet distance (FD) on Stochastic Moving MNIST.</caption>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Static FD ↓</th>
+                      <th>Dynamics FD ↓</th>
+                      <th>Frame-wise FD ↓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Latent SDE</td><td>2.66 &plusmn; 0.87</td><td>5.39 &plusmn; 3.10</td><td><strong>0.58 &plusmn; 0.21</strong></td></tr>
+                    <tr><td>Latent NSF (recursive)</td><td>2.36 &plusmn; 0.60</td><td>7.76 &plusmn; 2.56</td><td>0.63 &plusmn; 0.17</td></tr>
+                    <tr><td>Latent NSF (one-step)</td><td><strong>1.67 &plusmn; 0.47</strong></td><td>--</td><td>0.63 &plusmn; 0.15</td></tr>
+                  </tbody>
+                </table>
+                <p class="table-note">Dynamics FD is undefined for one-step NSF because it predicts the marginal distribution rather than multi-step trajectories.</p>
+                <figure class="result-figure small">
+                  <img src="media/results/smmnist_fd.svg" alt="Fréchet distance comparison on Stochastic Moving MNIST" loading="lazy" />
+                  <figcaption>Latent NSF improves static fidelity while maintaining competitive frame-wise quality; recursive rollout remains close on dynamics.</figcaption>
+                </figure>
+                <div class="image-grid">
+                  <figure>
+                    <img src="media/results/smmnist/ground_truth_grid.png" alt="Ground-truth Stochastic Moving MNIST frames" loading="lazy" />
+                    <figcaption>Ground-truth future frames</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="media/results/smmnist/latent_sde_grid.png" alt="Latent SDE Stochastic Moving MNIST predictions" loading="lazy" />
+                    <figcaption>Latent SDE rollout</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="media/results/smmnist/latent_nsf_recursive.png" alt="Recursive Latent NSF Stochastic Moving MNIST predictions" loading="lazy" />
+                    <figcaption>Latent NSF (recursive)</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="media/results/smmnist/latent_nsf_onestep.png" alt="One-step Latent NSF Stochastic Moving MNIST predictions" loading="lazy" />
+                    <figcaption>Latent NSF (one-step)</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </details>
+
         </div>
       </div>
-    </div>
+    </section>
+
+    <section id="bibtex">
+      <div class="panel">
+        <h2>BibTeX</h2>
+        <pre>@inproceedings{kiyohara2025neural,
+  title     = {Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions},
+  author    = {Naoki Kiyohara and Edward Johns and Yingzhen Li},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2025}
+}</pre>
+      </div>
+    </section>
+
+    <footer>
+      <p class="fine">© 2025 Naoki Kiyohara.</p>
+    </footer>
   </div>
-</section>
-<!-- End youtube video -->
-
-
-<!-- Video carousel -->
-<section class="hero is-small">
-  <div class="hero-body">
-    <div class="container">
-      <h2 class="title is-3">Another Carousel</h2>
-      <div id="results-carousel" class="carousel results-carousel">
-        <div class="item item-video1">
-          <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video1" controls muted loop height="100%" preload="metadata">
-            <!-- Your video file here -->
-            <source src="static/videos/carousel1.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-video2">
-          <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video2" controls muted loop height="100%" preload="metadata">
-            <!-- Your video file here -->
-            <source src="static/videos/carousel2.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-video3">
-          <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video3" controls muted loop height="100%" preload="metadata">
-            <!-- Your video file here -->
-            <source src="static/videos/carousel3.mp4" type="video/mp4">
-          </video>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- End video carousel -->
-
-
-
-
-
-
-<!-- Paper poster -->
-<section class="hero is-small is-light">
-  <div class="hero-body">
-    <div class="container">
-      <h2 class="title">Poster</h2>
-
-      <iframe  src="paper.pdf" width="100%" height="550">
-          </iframe>
-        
-      </div>
-    </div>
-  </section>
-<!--End paper poster -->
-
-
-
-<!--BibTex citation -->
-  <section class="section" id="BibTeX">
-    <div class="container is-max-desktop content">
-      <div class="bibtex-header">
-        <h2 class="title">BibTeX</h2>
-        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
-          <i class="fas fa-copy"></i>
-          <span class="copy-text">Copy</span>
-        </button>
-      </div>
-      <pre id="bibtex-code"><code>@inproceedings{kiyohara2025nsf,
-  title={Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions},
-  author={Kiyohara, Naoki and Johns, Edward and Li, Yingzhen},
-  booktitle={Advances in Neural Information Processing Systems},
-  year={2025},
-  url={https://nkiyohara.github.io/nsf-neurips2025}
-}</code></pre>
-    </div>
-</section>
-<!--End BibTex citation -->
-
-
-  <footer class="footer">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-
-          <p>
-            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
-            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
-            Commons Attribution-ShareAlike 4.0 International License</a>.
-          </p>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<!-- Statcounter tracking code -->
-  
-<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
-
-    <!-- End of Statcounter Code -->
-
-  </body>
-  </html>
+  <script>
+    // Expand / Collapse all
+    function toggleAll(open){
+      document.querySelectorAll('#results details').forEach(d => d.open = open);
+    }
+    // Deep-link: e.g., ...#lorenz を開く
+    (function(){
+      const id = location.hash.replace('#','');
+      if(!id) return;
+      const d = document.getElementById(id);
+      if(d && d.tagName.toLowerCase()==='details'){ d.open = true; d.scrollIntoView({block:'start'}); }
+    })();
+  </script>
+</body>
+</html>

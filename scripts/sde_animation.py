@@ -445,6 +445,7 @@ class EnsemblePathsToDensity(Scene):
             path_groups.append(vg)
             all_xs.append(xs)
         xs_matrix = np.asarray(all_xs)  # (num_paths, num_steps+1)
+        ensemble_group = VGroup(*path_groups)
 
         self.play(
             LaggedStart(
@@ -452,6 +453,17 @@ class EnsemblePathsToDensity(Scene):
             )
         )
         self.wait(0.8)
+        grey_color = COLORS["grid"]
+        self.play(
+            LaggedStart(
+                *[
+                    pg.animate.set_stroke(color=grey_color, opacity=0.18)
+                    for pg in path_groups
+                ],
+                lag_ratio=0.02,
+                run_time=0.6,
+            )
+        )
 
         # Show initial density at t=1, then attach updaters to move it over time
         current_t = ValueTracker(1.0)
@@ -535,13 +547,10 @@ class EnsemblePathsToDensity(Scene):
 
         t_label_group.add_updater(update_label)
 
-        self.play(
-            LaggedStart(
-                *[FadeOut(pg) for pg in path_groups], lag_ratio=0.02, run_time=0.6
-            )
-        )
         # Ensure the parent group with updater is part of the scene, then fade it in
         self.add(bars)
+        bars.set_z_index(2)
+        ensemble_group.set_z_index(0)
         self.play(FadeIn(bars), FadeIn(t_label_group))
 
         # Sweep density left and right across time with real-time updates
@@ -553,7 +562,7 @@ class EnsemblePathsToDensity(Scene):
         # Transition to direct sampling view
         bars.remove_updater(update_bars)
         t_label_group.remove_updater(update_label)
-        self.play(FadeOut(bars), FadeOut(t_label_group))
+        self.play(FadeOut(bars), FadeOut(t_label_group), FadeOut(ensemble_group))
 
         t_title = (
             Text("One-step sampling at arbitrary time")
