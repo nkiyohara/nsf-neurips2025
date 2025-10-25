@@ -277,20 +277,20 @@
 
     <section id="motivation">
       <div class="panel">
-        <h2>Motivation: Solver-Free SDEs</h2>
+        <h2>Solver-Free Modelling of SDEs</h2>
         <div class="two">
           <div>
-            <p>Stochastic differential equations capture the noisy dynamics of robotics, finance, climate systems, and modern generative models. Real deployments demand forecasts across arbitrary gaps, and evaluations must remain fast enough for control or analysis loops.</p>
-            <p>Solver-based neural SDEs approximate these transitions by threading hundreds of Euler–Maruyama steps, so the cost grows linearly with the horizon. This makes long-range or densely queried predictions difficult to deploy.</p>
-            <p>Neural Stochastic Flows side-step numerical integration by learning the transition density $p_\theta(x_t \mid x_s; \Delta t)$ in a single pass. The animation on the right shows the solver baseline we replace; the sections below explain how NSF keeps the expressivity of stochastic dynamics without the iterative burden.</p>
+            <p>Stochastic differential equations (SDEs) capture the noisy dynamics of robotics, finance, climate systems, and modern generative models. Real deployments demand forecasts across arbitrary gaps, and evaluations must remain fast enough for control or analysis loops.</p>
+            <p>Solver-based neural SDEs approximate these transitions by threading hundreds of computational steps, such as Euler–Maruyama, so the cost grows linearly with the horizon. This makes long-range or densely queried predictions difficult to deploy.</p>
+            <p>We propose <strong>Neural Stochastic Flows (NSFs)</strong> that side-step numerical integration by learning the transition density $p_\theta(x_t \mid x_s; \Delta t)$, where $x_s$ and $x_t$ are states at times $s$ and $t$ with $s < t$, and $\Delta t := t - s$ is the time gap, in a single pass. The animation shows the solver baseline we replace and what NSF models.</p>
           </div>
           <figure class="video-frame">
-            <video controls playsinline preload="metadata">
-              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm" media="(prefers-color-scheme: dark)">
-              <source src="scripts/media/videos/light/videos/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm" media="(prefers-color-scheme: light)">
-              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4" media="(prefers-color-scheme: dark)">
-              <source src="scripts/media/videos/light/videos/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4" media="(prefers-color-scheme: light)">
-              <source src="scripts/media/videos/light/videos/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4">
+            <video controls playsinline preload="metadata" data-poster-light="static/posters/EnsemblePathsToDensity-light.jpg" data-poster-dark="static/posters/EnsemblePathsToDensity-dark.jpg">
+              <source src="media/videos/dark/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm" media="(prefers-color-scheme: dark)">
+              <source src="media/videos/light/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm" media="(prefers-color-scheme: light)">
+              <source src="media/videos/dark/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4" media="(prefers-color-scheme: dark)">
+              <source src="media/videos/light/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4" media="(prefers-color-scheme: light)">
+              <source src="media/videos/light/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4">
               Your browser does not support HTML5 video.
             </video>
             <figcaption>NSF collapses ensembles into calibrated conditional densities without iterative solvers.</figcaption>
@@ -299,31 +299,9 @@
       </div>
     </section>
 
-    <section id="architecture">
+    <section id="approach">
       <div class="panel">
-        <h2>Neural Stochastic Flow Architecture</h2>
-        <div class="two">
-          <div>
-            <p>NSFs approximate the weak solution $p_\theta(x_t \mid x_s; s, t - s)$ by transforming Gaussian noise through conditional coupling flows. The architecture encodes the elapsed time $\Delta t$ explicitly so that transformations collapse to the identity as $\Delta t \to 0$, preserving the identity and Markov properties inherited from stochastic flows.</p>
-            <ul>
-              <li>State-dependent Gaussian initialisation mirrors the Euler–Maruyama update with drift scaled by $\Delta t$ and diffusion scaled by $\sqrt{\Delta t}$.</li>
-              <li>Affine coupling layers modulate their effect with $\Delta t$, ensuring bijectivity and closed-form log-densities for likelihood-based learning.</li>
-              <li>Conditioning on $(x_s, \Delta t, s)$ supports autonomous and non-autonomous SDEs while enabling direct evaluation of transition densities.</li>
-            </ul>
-          </div>
-          <div class="note-card">
-            <p><strong>Sampling recipe.</strong> Draw $\varepsilon \sim \mathcal{N}(0, I)$ and initialise</p>
-            <p>$$z = x_s + \Delta t\, \mu_\theta(x_s, s, \Delta t) + \sqrt{\Delta t}\, \sigma_\theta(x_s, s, \Delta t) \odot \varepsilon,$$</p>
-            <p>then apply stacked coupling flows $x_t = f_\theta(z; x_s, s, \Delta t)$, whose learnable parameters vanish as $\Delta t \to 0$.</p>
-            <p>This guarantees identity and Markov consistency while keeping the log-Jacobian available for likelihood training.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="flow-properties">
-      <div class="panel">
-        <h2>Conditions from Stochastic Flows</h2>
+        <h2>Modelling Weak Solutions (Conditional Densities) of SDEs</h2>
         <p>Following the derivation in the paper, Neural Stochastic Flows inherit the axioms of stochastic flows when viewed as weak solutions. The learned transition density $p_\theta(x_t \mid x_s; s, \Delta t)$ is trained to satisfy:</p>
         <ol class="flow-list">
           <li>
@@ -369,6 +347,28 @@
       </div>
     </section>
 
+    <section id="architecture">
+      <div class="panel">
+        <h2>Neural Stochastic Flow Architecture</h2>
+        <div class="two">
+          <div>
+            <p>NSFs approximate the weak solution $p_\theta(x_t \mid x_s; s, t - s)$ by transforming Gaussian noise through conditional coupling flows. The architecture encodes the elapsed time $\Delta t$ explicitly so that transformations collapse to the identity as $\Delta t \to 0$, preserving the identity and Markov properties inherited from stochastic flows.</p>
+            <ul>
+              <li>State-dependent Gaussian initialisation mirrors the Euler–Maruyama update with drift scaled by $\Delta t$ and diffusion scaled by $\sqrt{\Delta t}$.</li>
+              <li>Affine coupling layers modulate their effect with $\Delta t$, ensuring bijectivity and closed-form log-densities for likelihood-based learning.</li>
+              <li>Conditioning on $(x_s, \Delta t, s)$ supports autonomous and non-autonomous SDEs while enabling direct evaluation of transition densities.</li>
+            </ul>
+          </div>
+          <div class="note-card">
+            <p><strong>Sampling recipe.</strong> Draw $\varepsilon \sim \mathcal{N}(0, I)$ and initialise</p>
+            <p>$$z = x_s + \Delta t\, \mu_\theta(x_s, s, \Delta t) + \sqrt{\Delta t}\, \sigma_\theta(x_s, s, \Delta t) \odot \varepsilon,$$</p>
+            <p>then apply stacked coupling flows $x_t = f_\theta(z; x_s, s, \Delta t)$, whose learnable parameters vanish as $\Delta t \to 0$.</p>
+            <p>This guarantees identity and Markov consistency while keeping the log-Jacobian available for likelihood training.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="flow-consistency">
       <div class="panel">
         <h2>Flow Consistency Regularisation</h2>
@@ -378,12 +378,12 @@
             <p>Because every transformation is invertible, the transition log-density remains available in closed form, enabling joint optimisation of likelihood and flow consistency.</p>
           </div>
           <figure class="video-frame">
-            <video controls playsinline preload="metadata">
-              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm" media="(prefers-color-scheme: dark)">
-              <source src="scripts/media/videos/light/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm" media="(prefers-color-scheme: light)">
-              <source src="scripts/media/videos/dark/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4" media="(prefers-color-scheme: dark)">
-              <source src="scripts/media/videos/light/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4" media="(prefers-color-scheme: light)">
-              <source src="scripts/media/videos/light/videos/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4">
+            <video controls playsinline preload="metadata" data-poster-light="static/posters/ChapmanKolmogorovConsistency-light.jpg" data-poster-dark="static/posters/ChapmanKolmogorovConsistency-dark.jpg">
+              <source src="media/videos/dark/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm" media="(prefers-color-scheme: dark)">
+              <source src="media/videos/light/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm" media="(prefers-color-scheme: light)">
+              <source src="media/videos/dark/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4" media="(prefers-color-scheme: dark)">
+              <source src="media/videos/light/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4" media="(prefers-color-scheme: light)">
+              <source src="media/videos/light/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4">
               Your browser does not support HTML5 video.
             </video>
             <figcaption>Flow-consistency loss matches one-step and two-step transitions through a shared bridge distribution.</figcaption>
@@ -678,6 +678,44 @@
       if(!id) return;
       const d = document.getElementById(id);
       if(d && d.tagName.toLowerCase()==='details'){ d.open = true; d.scrollIntoView({block:'start'}); }
+    })();
+    // Keep video posters in sync with the active color theme so the first frame shows before playback.
+    (function(){
+      const videos = Array.from(document.querySelectorAll('video[data-poster-light]'));
+      if(!videos.length) return;
+
+      const prefersDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      const pickPoster = (video, theme) => {
+        if(theme === 'dark'){
+          return video.dataset.posterDark || video.dataset.posterLight || '';
+        }
+        return video.dataset.posterLight || video.dataset.posterDark || '';
+      };
+      const applyPosters = () => {
+        const explicitTheme = document.documentElement.getAttribute('data-theme');
+        const prefersDark = prefersDarkQuery ? prefersDarkQuery.matches : false;
+        const theme = explicitTheme === 'dark' || (!explicitTheme && prefersDark) ? 'dark' : 'light';
+        videos.forEach(video => {
+          const poster = pickPoster(video, theme);
+          if(poster) video.setAttribute('poster', poster);
+        });
+      };
+
+      applyPosters();
+
+      if(prefersDarkQuery){
+        const handler = () => applyPosters();
+        if(typeof prefersDarkQuery.addEventListener === 'function'){
+          prefersDarkQuery.addEventListener('change', handler);
+        }else if(typeof prefersDarkQuery.addListener === 'function'){
+          prefersDarkQuery.addListener(handler);
+        }
+      }
+
+      if('MutationObserver' in window){
+        const observer = new MutationObserver(applyPosters);
+        observer.observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+      }
     })();
   </script>
 </body>
