@@ -313,83 +313,12 @@
       color: var(--muted);
     }
 
-    .video-pair {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-top: 16px;
-    }
-
-    @media (max-width: 720px) {
-      .video-pair {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .video-pair figure {
-      margin: 0;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      background: var(--panel);
-    }
-
-    .video-pair video {
-      display: block;
-      width: 100%;
-      height: auto;
-      background: var(--panel);
-    }
-
-    .video-pair figcaption {
-      margin: 0;
-      padding: 12px 14px;
-      font-size: 14px;
-      color: var(--muted);
-    }
-
     figure {
       margin: 0;
     }
 
     figcaption {
       margin-top: 8px;
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 18px;
-    }
-
-    @media (max-width: 720px) {
-      .video-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .video-card {
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      background: var(--panel);
-    }
-
-    .video-card video {
-      width: 100%;
-      border-radius: 12px;
-      background: var(--panel);
-    }
-
-    .video-card h3 {
-      margin: 12px 0 6px;
-      font-size: 18px;
-    }
-
-    .video-card p {
-      margin: 0;
       font-size: 14px;
       color: var(--muted);
     }
@@ -474,6 +403,9 @@
       align-self: center;
       justify-self: center;
       object-fit: contain;
+      background: #ffffff;
+      padding: 4px;
+      box-sizing: border-box;
     }
 
     .image-grid figcaption {
@@ -493,12 +425,18 @@
       overflow: hidden;
       background: var(--panel);
       padding: 16px;
+      display: grid;
+      gap: 10px;
     }
 
     .result-figure img {
       width: 100%;
       height: auto;
       display: block;
+      background: #ffffff;
+      padding: 4px;
+      box-sizing: border-box;
+      border-radius: 8px;
     }
 
     .result-figure.small {
@@ -508,10 +446,11 @@
     }
 
     .result-figure figcaption {
-      margin-top: 10px;
+      margin: 0;
       font-size: 13px;
       color: var(--muted);
-      text-align: center;
+      text-align: left;
+      line-height: 1.45;
     }
 
     .flow-list {
