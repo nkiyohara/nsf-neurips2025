@@ -31,3 +31,7 @@ platforms. Scenes that render LaTeX objects also require a TeX distribution
 such as TeX Live with the packages installed in the CI workflow. If `pkg-config`
 cannot locate `pangocairo`, export `PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig`
 before running the render script.
+
+Text elements use the Inter font family. On Linux the CI workflows install the
+`fonts-inter` package; on macOS install Inter from https://rsms.me/inter/ (or
+via Homebrew `brew install --cask font-inter`) so local renders match CI output.

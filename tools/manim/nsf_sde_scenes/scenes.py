@@ -43,6 +43,7 @@ from manim import (
     Tex,
     Text,
     VGroup,
+    VMobject,
     ValueTracker,
     config,
 )
@@ -78,6 +79,7 @@ if THEME_NAME not in THEMES:
 COLORS = THEMES[THEME_NAME]
 
 config.background_color = COLORS["background"]
+config.default_font = "Inter"  # Ensure Text elements use Inter for visual consistency
 
 GRID_INITIAL_OPACITY = 0.3
 GRID_FINAL_OPACITY = 0.18
@@ -763,15 +765,15 @@ class ChapmanKolmogorovConsistency(Scene):
         lines_bot = add_axes_lines(axes_bot)
 
         # Add y-axis labels
-        y_label_top = Tex(r"State $x$").scale(0.65).set_color(COLORS["text"])
+        y_label_top = Tex(r"State $x$").scale(0.75).set_color(COLORS["text"])
         y_label_top.next_to(lines_top[1], LEFT, buff=0.15)
-        y_label_bot = Tex(r"State $x$").scale(0.65).set_color(COLORS["text"])
+        y_label_bot = Tex(r"State $x$").scale(0.75).set_color(COLORS["text"])
         y_label_bot.next_to(lines_bot[1], LEFT, buff=0.15)
         
         # Add time axis labels
-        x_label_top = Tex(r"Time").scale(0.65).set_color(COLORS["text"])
+        x_label_top = Tex(r"Time").scale(0.75).set_color(COLORS["text"])
         x_label_top.next_to(lines_top[0], DOWN, buff=0.3)
-        x_label_bot = Tex(r"Time").scale(0.65).set_color(COLORS["text"])
+        x_label_bot = Tex(r"Time").scale(0.75).set_color(COLORS["text"])
         x_label_bot.next_to(lines_bot[0], DOWN, buff=0.3)
         
         self.add(axes_top, axes_bot, lines_top[0], lines_top[1], lines_bot[0], lines_bot[1])
@@ -780,14 +782,14 @@ class ChapmanKolmogorovConsistency(Scene):
         # Titles
         sub_top = (
             Tex(r"One-step: $x_u \sim p_\theta(x_u\mid x_s;\,u-s)$")
-            .scale(0.65)
+            .scale(0.75)
             .set_color(COLORS["text"])
         )
         sub_bot = (
             Tex(
                 r"Two-step: $x_u \sim \int p_\theta(x_u\mid x_t;\,u-t)\,p_\theta(x_t\mid x_s;\,t-s)\,\mathrm{d}x_t$"
             )
-            .scale(0.65)
+            .scale(0.75)
             .set_color(COLORS["text"])
         )
         sub_top.next_to(axes_top, UP, buff=0.18)
@@ -810,9 +812,9 @@ class ChapmanKolmogorovConsistency(Scene):
                 ax.c2p(t, -3), ax.c2p(t, -2.85), color=COLORS["axes"], stroke_width=2
             )
             # Center labels below ticks by using move_to with tick's x-coordinate
-            lbl_s = Tex(r"$s$").scale(0.65).set_color(COLORS["text"])
+            lbl_s = Tex(r"$s$").scale(0.75).set_color(COLORS["text"])
             lbl_s.move_to([ax.c2p(s, -3)[0], tick_s.get_bottom()[1] - 0.15, 0])
-            lbl_t = Tex(r"$t$").scale(0.65).set_color(COLORS["text"])
+            lbl_t = Tex(r"$t$").scale(0.75).set_color(COLORS["text"])
             lbl_t.move_to([ax.c2p(t, -3)[0], tick_t.get_bottom()[1] - 0.15, 0])
             if show_u:
                 tick_u = Line(
@@ -821,7 +823,7 @@ class ChapmanKolmogorovConsistency(Scene):
                     color=COLORS["axes"],
                     stroke_width=2,
                 )
-                lbl_u = Tex(r"$u$").scale(0.65).set_color(COLORS["text"])
+                lbl_u = Tex(r"$u$").scale(0.75).set_color(COLORS["text"])
                 lbl_u.move_to([ax.c2p(u, -3)[0], tick_u.get_bottom()[1] - 0.15, 0])
                 return VGroup(tick_s, tick_t, tick_u, lbl_s, lbl_t, lbl_u)
             else:
@@ -949,26 +951,7 @@ class ChapmanKolmogorovConsistency(Scene):
         y_min, y_max, N_BINS = -3.0, 3.0, 160
         y_grid = np.linspace(y_min, y_max, N_BINS + 1)
         ys_center = 0.5*(y_grid[:-1] + y_grid[1:])
-        WIDTH, EPS = 0.16, 1e-6
-        def make_bars(ax, time_pos, color):
-            vg = VGroup()
-            for i in range(N_BINS):
-                y0, y1 = y_grid[i], y_grid[i+1]
-                y0p, y1p = ax.c2p(0, y0)[1], ax.c2p(0, y1)[1]
-                x = ax.c2p(time_pos, 0.0)[0]
-                vg.add(VGroup(
-                    Line([x, y0p, 0], [x, y0p, 0], color=color, stroke_opacity=0.95),
-                    Line([x, y1p, 0], [x, y1p, 0], color=color, stroke_opacity=0.95),
-                    Line([x, y0p, 0], [x, y1p, 0], color=color, stroke_opacity=0.95),
-                    Line([x, y0p, 0], [x, y1p, 0], color=color, stroke_opacity=0.95),
-                ))
-            return vg
-        bars_top = make_bars(axes_top, u, COLORS["primary"])
-        bars_bot_t = make_bars(axes_bot, t, COLORS["secondary"])
-        bars_bot_u = make_bars(axes_bot, u, COLORS["secondary"])
-        self.play(FadeOut(dots_top_u), FadeOut(dots_bot_t), FadeOut(dots_bot_u))
-        self.play(FadeIn(bars_top), FadeIn(bars_bot_t), FadeIn(bars_bot_u))
-
+        WIDTH, EPS = 0.04, 1e-6  # Narrower density lobes (quarter thickness)
         def kde_density(samples: np.ndarray, bw: float = 0.25):
             z = (ys_center[:, None] - samples[None, :]) / (bw + EPS)
             dens = np.exp(-0.5 * z**2).mean(axis=1) / (np.sqrt(2*np.pi)*(bw+EPS))
@@ -983,81 +966,73 @@ class ChapmanKolmogorovConsistency(Scene):
         dt = kde_density(xt2, bw=0.15)  # Narrower bandwidth for intermediate distribution
         d2 = kde_density(xu2, bw=0.25)
         
-        # Create alpha tracker for smooth transition from line to distribution
+        # Create alpha tracker for smooth transition of the filled patches
         alpha = ValueTracker(0.0)
-        
-        def update_bars(mob):
-            a = alpha.get_value()
-            for i in range(N_BINS):
-                y0, y1 = y_grid[i], y_grid[i+1]
-                y0p_t, y1p_t = axes_top.c2p(0, y0)[1], axes_top.c2p(0, y1)[1]
-                y0p_b, y1p_b = axes_bot.c2p(0, y0)[1], axes_bot.c2p(0, y1)[1]
-                # Top: distribution at u
-                xc_t = axes_top.c2p(u, 0.0)[0]
-                w_t = a * WIDTH * (d1[i] / (d1.max() + 1e-6))
-                p00 = np.array([xc_t - w_t, y0p_t, 0]); p01 = np.array([xc_t + w_t, y0p_t, 0])
-                p10 = np.array([xc_t - w_t, y1p_t, 0]); p11 = np.array([xc_t + w_t, y1p_t, 0])
-                g = bars_top[i]
-                g[0].become(
-                    Line(p00, p01, color=COLORS["primary"], stroke_opacity=0.95)
+
+        def make_density_patch(ax, time_pos, density, color):
+            patch = VMobject()
+            patch.set_style(
+                stroke_color=color,
+                stroke_width=2,
+                stroke_opacity=0.0,
+                fill_color=color,
+                fill_opacity=0.0,
+            )
+
+            def updater(mob):
+                a = alpha.get_value()
+                norm = density.max() + EPS
+                left_pts = []
+                right_pts = []
+                for y, dens in zip(ys_center, density):
+                    half_width = a * WIDTH * (dens / norm)
+                    left_pts.append(ax.c2p(time_pos - half_width, y))
+                    right_pts.append(ax.c2p(time_pos + half_width, y))
+                if not left_pts:
+                    return mob
+                outline = left_pts + right_pts[::-1] + [left_pts[0]]
+                mob.set_points_as_corners(outline)
+                mob.make_smooth()
+                mob.set_style(
+                    stroke_color=color,
+                    stroke_width=2,
+                    stroke_opacity=0.7 * a,
+                    fill_color=color,
+                    fill_opacity=0.3 * a,
                 )
-                g[1].become(
-                    Line(p10, p11, color=COLORS["primary"], stroke_opacity=0.95)
-                )
-                g[2].become(
-                    Line(p00, p10, color=COLORS["primary"], stroke_opacity=0.95)
-                )
-                g[3].become(
-                    Line(p01, p11, color=COLORS["primary"], stroke_opacity=0.95)
-                )
-                # Bottom: distribution at t (narrower)
-                xc_bt = axes_bot.c2p(t, 0.0)[0]
-                w_bt = a * WIDTH * (dt[i] / (dt.max() + 1e-6))
-                r00 = np.array([xc_bt - w_bt, y0p_b, 0]); r01 = np.array([xc_bt + w_bt, y0p_b, 0])
-                r10 = np.array([xc_bt - w_bt, y1p_b, 0]); r11 = np.array([xc_bt + w_bt, y1p_b, 0])
-                gt = bars_bot_t[i]
-                gt[0].become(
-                    Line(r00, r01, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                gt[1].become(
-                    Line(r10, r11, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                gt[2].become(
-                    Line(r00, r10, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                gt[3].become(
-                    Line(r01, r11, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                # Bottom: distribution at u
-                xc_bu = axes_bot.c2p(u, 0.0)[0]
-                w_bu = a * WIDTH * (d2[i] / (d2.max() + 1e-6))
-                q00 = np.array([xc_bu - w_bu, y0p_b, 0]); q01 = np.array([xc_bu + w_bu, y0p_b, 0])
-                q10 = np.array([xc_bu - w_bu, y1p_b, 0]); q11 = np.array([xc_bu + w_bu, y1p_b, 0])
-                g2 = bars_bot_u[i]
-                g2[0].become(
-                    Line(q00, q01, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                g2[1].become(
-                    Line(q10, q11, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                g2[2].become(
-                    Line(q00, q10, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-                g2[3].become(
-                    Line(q01, q11, color=COLORS["secondary"], stroke_opacity=0.95)
-                )
-        
-        bars_top.add_updater(update_bars)
-        bars_bot_t.add_updater(update_bars)
-        bars_bot_u.add_updater(update_bars)
-        
-        # Animate the transition from lines to distributions
-        self.play(alpha.animate.set_value(1.0), run_time=1.8)
-        
-        bars_top.remove_updater(update_bars)
-        bars_bot_t.remove_updater(update_bars)
-        bars_bot_u.remove_updater(update_bars)
-        
+                return mob
+
+            patch.add_updater(updater)
+            return patch
+
+        top_patch = make_density_patch(axes_top, u, d1, COLORS["primary"])
+        bot_t_patch = make_density_patch(axes_bot, t, dt, COLORS["secondary"])
+        bot_u_patch = make_density_patch(axes_bot, u, d2, COLORS["secondary"])
+        self.add(top_patch, bot_t_patch, bot_u_patch)
+
+        fade_top = LaggedStart(*[FadeOut(d) for d in dots_top_u], lag_ratio=0.05)
+        fade_mid = LaggedStart(*[FadeOut(d) for d in dots_bot_t], lag_ratio=0.05)
+        fade_bot = LaggedStart(*[FadeOut(d) for d in dots_bot_u], lag_ratio=0.05)
+        self.play(
+            AnimationGroup(fade_top, fade_mid, fade_bot, lag_ratio=0.15),
+            alpha.animate.set_value(1.0),
+            run_time=1.8,
+        )
+
+        for patch, color in (
+            (top_patch, COLORS["primary"]),
+            (bot_t_patch, COLORS["secondary"]),
+            (bot_u_patch, COLORS["secondary"]),
+        ):
+            patch.clear_updaters()
+            patch.set_style(
+                stroke_color=color,
+                stroke_width=2,
+                stroke_opacity=0.7,
+                fill_color=color,
+                fill_opacity=0.3,
+            )
+
         self.wait(0.3)
         
         # Now show the comparison arrow and text
