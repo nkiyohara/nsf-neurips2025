@@ -389,6 +389,9 @@
       gap: 12px;
       margin: 16px 0;
       align-items: stretch;
+      /* Safari compatibility: ensure proper grid layout */
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .image-grid figure {
@@ -398,9 +401,13 @@
       background: var(--panel);
       padding: 12px;
       display: grid;
-      grid-template-rows: clamp(150px, 18vw, 220px) minmax(0, max-content);
+      /* Safari compatibility: use fixed min height instead of clamp in grid-template-rows */
+      grid-template-rows: minmax(150px, 220px) auto;
       gap: 10px;
       margin: 0;
+      /* Safari compatibility: ensure proper box model */
+      box-sizing: border-box;
+      min-width: 0;
     }
 
     .image-grid img {
@@ -414,6 +421,8 @@
       background: #ffffff;
       padding: 4px;
       box-sizing: border-box;
+      /* Safari compatibility: prevent image overflow */
+      max-height: 220px;
     }
 
     .image-grid figcaption {
@@ -424,6 +433,9 @@
       justify-self: stretch;
       margin: 0;
       line-height: 1.45;
+      /* Safari compatibility: ensure caption doesn't overflow or overlap */
+      min-height: fit-content;
+      padding-top: 2px;
     }
 
     .result-figure {
