@@ -1,0 +1,73 @@
+name: Build Media Assets
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'site/**'
+      - '.github/workflows/build-media.yml'
+
+jobs:
+  build-media:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Cache uv environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('tools/manim/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ffmpeg \
+            pkg-config \
+            libcairo2-dev \
+            libpango1.0-dev \
+            build-essential
+
+      - name: Check pkg-config availability
+        run: |
+          set -euxo pipefail
+          pkg-config --version
+          pkg-config --variable pc_path pkg-config
+          pkg-config --print-errors --modversion pangocairo || true
+
+      - name: Install TeX Live
+        uses: zauguin/install-texlive@v4
+        with:
+          packages: >
+            scheme-basic latex fontspec tipa calligra xcolor
+            standalone preview doublestroke setspace rsfs relsize
+            ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx
+            wasy cm-super babel-english gnu-freefont mathastext cbfonts-fd xetex
+
+      - name: Build media pipeline
+        env:
+          PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+        run: ./tools/cli/build_media.sh
+
+      - name: Upload site assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-assets
+          path: site/assets
+
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: manim-build
+          path: build/manim

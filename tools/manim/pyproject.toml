@@ -1,0 +1,12 @@
+[project]
+name = "nsf-sde-scenes"
+version = "0.1.0"
+description = "Manim scenes for the Neural Stochastic Flows project page"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "manim>=0.19.0",
+    "numpy>=2.3.3",
+    "pycairo>=1.28.0",
+    "matplotlib>=3.9.2",
+]

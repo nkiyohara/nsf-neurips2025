@@ -1,0 +1,14 @@
+# Build artefacts
+build/
+
+# Generated site assets
+site/assets/videos/
+site/assets/posters/
+site/assets/images/
+!site/assets/videos/.gitkeep
+!site/assets/posters/.gitkeep
+!site/assets/images/.gitkeep
+
+# Python caches
+__pycache__/
+*.pyc

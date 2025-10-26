@@ -1,0 +1,1892 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions</title>
+  <meta name="description"
+    content="Neural Stochastic Flows learn solver-free transition densities for stochastic differential equations using conditional normalising flows and flow-consistency regularisation." />
+  <meta property="og:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions" />
+  <meta property="og:description"
+    content="Solver-free modelling and inference for SDE solutions with conditional normalising flows." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/images/teaser.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --maxw: 980px;
+      --radius: 18px;
+      --bg: #0b0c0f;
+      --bg-alt: #0e1117;
+      --panel: #12141a;
+      --text: #e9ecf1;
+      --muted: #aab3c4;
+      --link: #90caf9;
+      --accent: #b4ff39;
+      --ink-on-accent: #0b0c0f;
+      --border: #232733;
+      --ghost-border: #2b2f3a;
+      --code-bg: #0a0c11;
+      --code-fg: #e9ecf1;
+      color-scheme: light dark;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --bg-alt: #eef2f7;
+        --panel: #ffffff;
+        --text: #0b1220;
+        --muted: #5b667a;
+        --link: #1d4ed8;
+        --accent: #3BD16F;
+        --ink-on-accent: #001510;
+        --border: #e5e7eb;
+        --ghost-border: #d0d4dd;
+        --code-bg: #f3f4f6;
+        --code-fg: #0b1220;
+      }
+    }
+
+    html[data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-alt: #eef2f7;
+      --panel: #ffffff;
+      --text: #0b1220;
+      --muted: #5b667a;
+      --link: #1d4ed8;
+      --accent: #3BD16F;
+      --ink-on-accent: #001510;
+      --border: #e5e7eb;
+      --ghost-border: #d0d4dd;
+      --code-bg: #f3f4f6;
+      --code-fg: #0b1220;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #0b0c0f;
+      --bg-alt: #0e1117;
+      --panel: #12141a;
+      --text: #e9ecf1;
+      --muted: #aab3c4;
+      --link: #90caf9;
+      --accent: #b4ff39;
+      --ink-on-accent: #0b0c0f;
+      --border: #232733;
+      --ghost-border: #2b2f3a;
+      --code-bg: #0a0c11;
+      --code-fg: #e9ecf1;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(180deg, var(--bg), var(--bg-alt));
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+
+    .wrap {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 28px 18px 72px;
+    }
+
+    header.hero {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .title {
+      font-size: clamp(28px, 4.2vw, 44px);
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .title br {
+      display: none;
+    }
+
+    @media (min-width: 640px) {
+      .title br {
+        display: block;
+      }
+    }
+
+    .subtitle {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--muted);
+    }
+
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: var(--ink-on-accent);
+    }
+
+    .btn.ghost {
+      border: 1px solid var(--ghost-border);
+      color: var(--text);
+    }
+
+    .btn.disabled,
+    .btn[aria-disabled="true"] {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .authors {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 16px;
+      font-size: 15px;
+    }
+
+    .authors a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    .affil {
+      color: var(--muted);
+      flex-basis: 100%;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .venue {
+      font-size: 15px;
+      text-transform: none;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 2px 0 0;
+    }
+
+    .abstract-section {
+      margin-top: 28px;
+    }
+
+    .abstract-card {
+      position: relative;
+      padding: 28px 26px;
+      border-radius: calc(var(--radius) + 4px);
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel));
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    .abstract-card::before {
+      content: "";
+      position: absolute;
+      inset: -120px 40% auto -80px;
+      height: 220px;
+      border-radius: 70%;
+      background: radial-gradient(circle at center, color-mix(in srgb, var(--accent) 40%, transparent) 0%, transparent 70%);
+      opacity: 0.6;
+      pointer-events: none;
+      filter: blur(4px);
+      z-index: 0;
+    }
+
+    .abstract-card>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .abstract-card h2 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .abstract-card p {
+      margin: 14px 0 0;
+      font-size: 15.5px;
+    }
+
+    section {
+      margin-top: 36px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: clamp(20px, 2.8vw, 26px);
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    a {
+      color: var(--link);
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .two> :nth-child(n+3) {
+      grid-column: 1 / -1;
+    }
+
+    .two.two-pairs> :nth-child(n+3) {
+      grid-column: auto;
+    }
+
+    @media (max-width: 860px) {
+      .two {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .video-frame {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .video-frame video {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--panel);
+    }
+
+    .video-frame figcaption {
+      margin: 12px 14px 0;
+      padding-bottom: 12px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .video-pair {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .video-pair {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .video-pair figure {
+      margin: 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel);
+    }
+
+    .video-pair video {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--panel);
+    }
+
+    .video-pair figcaption {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    figcaption {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 720px) {
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .video-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--panel);
+    }
+
+    .video-card video {
+      width: 100%;
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .video-card h3 {
+      margin: 12px 0 6px;
+      font-size: 18px;
+    }
+
+    .video-card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .checks {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0;
+    }
+
+    .checks li {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .checks li>span,
+    .checks li>div,
+    .checks li>p {
+      margin: 0;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 12px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .check-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .math-block {
+      margin: 4px 0 0;
+    }
+
+    h3 {
+      margin: 18px 0 10px;
+      font-size: 20px;
+    }
+
+    .result-block {
+      margin-top: 24px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+      align-items: stretch;
+    }
+
+    .image-grid figure {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--panel);
+      padding: 12px;
+      display: grid;
+      grid-template-rows: clamp(150px, 18vw, 220px) minmax(0, max-content);
+      gap: 10px;
+      margin: 0;
+    }
+
+    .image-grid img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
+      align-self: center;
+      justify-self: center;
+      object-fit: contain;
+    }
+
+    .image-grid figcaption {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: left;
+      align-self: start;
+      justify-self: stretch;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .result-figure {
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel);
+      padding: 16px;
+    }
+
+    .result-figure img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .result-figure.small {
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .result-figure figcaption {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .flow-list {
+      margin: 16px 0 0;
+      padding-left: 18px;
+    }
+
+    .flow-list li {
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .flow-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--ink-on-accent);
+      background: var(--accent);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .flow-list strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .flow-list p {
+      margin: 4px 0;
+      font-size: 14.5px;
+    }
+
+    .flow-list .table-note {
+      margin: 6px 0 0;
+      font-size: 14.5px;
+      color: color-mix(in srgb, var(--accent) 70%, var(--text));
+      font-weight: 600;
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .result-table caption {
+      caption-side: top;
+      text-align: left;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .result-table th,
+    .result-table td {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .result-table th {
+      background: rgba(255, 255, 255, 0.02);
+      font-weight: 600;
+    }
+
+    .result-table td:first-child,
+    .result-table th:first-child {
+      text-align: left;
+    }
+
+    .table-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .method-group {
+      font-weight: 600;
+    }
+
+    .subrow {
+      padding-left: 16px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      overflow: auto;
+      font-size: 13px;
+    }
+
+    .bibtex-block {
+      position: relative;
+      margin-top: 14px;
+    }
+
+    .bibtex-block pre {
+      padding: 14px 60px 14px 14px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--ghost-border);
+      background: color-mix(in srgb, var(--panel) 92%, var(--accent) 8%);
+      color: var(--text);
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, background 0.2s ease, transform 0.1s ease;
+    }
+
+    .copy-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .copy-btn:hover {
+      background: color-mix(in srgb, var(--panel) 80%, var(--accent) 20%);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.95);
+    }
+
+    .copy-btn:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+      outline-offset: 2px;
+    }
+
+    .bibtex-block:hover .copy-btn,
+    .bibtex-block:focus-within .copy-btn,
+    .copy-btn:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .copy-feedback {
+      position: absolute;
+      top: -34px;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(6px);
+      background: var(--accent);
+      color: var(--ink-on-accent);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 999px;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+      visibility: hidden;
+    }
+
+    .copy-feedback.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+    }
+
+    .copy-feedback.is-error {
+      background: color-mix(in srgb, #ff3b3b 70%, var(--panel));
+      color: #fff;
+    }
+
+    /* --- Results accordion --- */
+    .results-accordion details {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .results-accordion summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+    }
+
+    .results-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .results-accordion .summary-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .results-accordion .summary-right {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .results-accordion .chev {
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--ghost-border);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .results-accordion details[open] .chev {
+      transform: rotate(90deg);
+    }
+
+    .results-accordion .panel-inner {
+      padding: 0 18px 18px;
+    }
+
+    /* Adjust spacing for result blocks inside accordion */
+    .results-accordion .result-block {
+      margin: 0;
+      border: none;
+      padding: 0;
+    }
+
+    .results-accordion .result-block>*:first-child {
+      margin-top: 0;
+    }
+
+    .results-accordion .result-block>*:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Expand/collapse all buttons */
+    .results-toolbar {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin: 8px 0 12px;
+    }
+
+    .results-toolbar .btn.small {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid var(--ghost-border);
+      text-decoration: none;
+      color: var(--text);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    /* Prevent equation overflow for SVG output */
+    mjx-container[jax="SVG"] {
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* Fit SVG to parent width */
+    mjx-container[jax="SVG"]>svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    /* Slightly smaller equations on mobile */
+    @media (max-width: 640px) {
+      mjx-container[jax="SVG"] {
+        font-size: 0.95em;
+      }
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]], displayMath: [["$$", "$$"], ["\\[", "\\]"]] },
+      svg: {
+        fontCache: "global",
+        linebreaks: { automatic: true, width: "container" }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+  <meta name="color-scheme" content="dark light" />
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1 class="title">Neural Stochastic Flows:<wbr> Solver-Free Modelling and Inference for SDE Solutions</h1>
+      <p class="venue">NeurIPS 2025</p>
+      <div class="authors">
+        <span><a href="https://nkiyohara.github.io/" target="_blank" rel="noopener">Naoki
+            Kiyohara</a><sup>1,2</sup></span>
+        <span><a href="https://www.robot-learning.uk/" target="_blank" rel="noopener">Edward
+            Johns</a><sup>1</sup></span>
+        <span><a href="https://yingzhenli.net" target="_blank" rel="noopener">Yingzhen Li</a><sup>1</sup></span>
+        <span class="affil"><sup>1</sup>Imperial College London, <sup>2</sup>Canon Inc.</span>
+      </div>
+      <div class="cta">
+        <a class="btn primary disabled" href="#" aria-disabled="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-file-text-icon lucide-file-text">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+            <path d="M10 9H8" />
+            <path d="M16 13H8" />
+            <path d="M16 17H8" />
+          </svg>
+          Paper (Coming soon)
+        </a>
+        <a class="btn ghost" href="https://github.com/nkiyohara/jax_nsf" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-github-icon lucide-github">
+            <path
+              d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+            <path d="M9 18c-4.51 2-5-2-7-2" />
+          </svg>
+          Code
+        </a>
+      </div>
+    </header>
+
+    <section id="abstract" class="abstract-section">
+      <div class="abstract-card">
+        <h2>Abstract</h2>
+        <p>Stochastic differential equations (SDEs) are well suited to modelling noisy and/or irregularly-sampled time
+          series, which are omnipresent in finance, physics, and machine learning applications. Traditional approaches
+          require costly simulation of numerical solvers when sampling between arbitrary time points. We introduce
+          Neural Stochastic Flows (NSFs) and their latent dynamic versions, which learn (latent) SDE transition laws
+          directly using conditional normalising flows, with architectural constraints that preserve properties
+          inherited from stochastic flows. This enables sampling between arbitrary states in a single step, providing up
+          to two orders of magnitude speedup for distant time points. Experiments on synthetic SDE simulations and
+          real-world tracking and video data demonstrate that NSF maintains distributional accuracy comparable to
+          numerical approaches while dramatically reducing computation for arbitrary time-point sampling, enabling
+          applications where numerical solvers remain prohibitively expensive.</p>
+      </div>
+    </section>
+
+    <section id="motivation">
+      <div class="panel">
+        <h2>Solver-Free Modelling of SDEs</h2>
+        <div class="two two-pairs">
+          <div>
+            <p>Stochastic differential equations (SDEs) capture the noisy dynamics of robotics, finance, climate
+              systems, and modern generative models. Real deployments demand forecasts across arbitrary gaps, and
+              evaluations must remain fast enough for control or analysis loops.</p>
+            <p>Solver-based neural SDEs approximate these transitions by threading hundreds of computational steps, such
+              as Euler–Maruyama, so the cost grows linearly with the horizon. This makes long-range or densely queried
+              predictions difficult to deploy.</p>
+          </div>
+          <figure class="video-frame">
+            <video controls playsinline preload="metadata"
+              data-poster-light="assets/posters/EulerMaruyama-light.jpg"
+              data-poster-dark="assets/posters/EulerMaruyama-dark.jpg">
+              <source src="assets/videos/dark/sde_animation/720p60/EulerMaruyama.webm" type="video/webm"
+                media="(prefers-color-scheme: dark)">
+              <source src="assets/videos/light/sde_animation/720p60/EulerMaruyama.webm" type="video/webm"
+                media="(prefers-color-scheme: light)">
+              <source src="assets/videos/dark/sde_animation/720p60/EulerMaruyama.mp4" type="video/mp4"
+                media="(prefers-color-scheme: dark)">
+              <source src="assets/videos/light/sde_animation/720p60/EulerMaruyama.mp4" type="video/mp4"
+                media="(prefers-color-scheme: light)">
+              <source src="assets/videos/light/sde_animation/720p60/EulerMaruyama.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+            <figcaption>Numerical SDE solvers require iterative integration steps for long-horizon predictions.
+            </figcaption>
+          </figure>
+          <div>
+            <p>To address these computational challenges, we propose <strong>Neural Stochastic Flows (NSFs)</strong> that side-step numerical integration by
+              learning the transition density $p_\boldsymbol{\theta}(\boldsymbol{x}_t \mid \boldsymbol{x}_s; \Delta t)$,
+              where $\boldsymbol{x}_s$ and $\boldsymbol{x}_t$ are states at times $s$ and $t$ with $s < t$, and $\Delta
+                t :=t - s$ is the time gap, in a single pass. The animation shows the solver baseline we replace and
+                what NSF models.</p>
+          </div>
+          <figure class="video-frame">
+            <video controls playsinline preload="metadata"
+              data-poster-light="assets/posters/EnsemblePathsToDensity-light.jpg"
+              data-poster-dark="assets/posters/EnsemblePathsToDensity-dark.jpg">
+              <source src="assets/videos/dark/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm"
+                media="(prefers-color-scheme: dark)">
+              <source src="assets/videos/light/sde_animation/720p60/EnsemblePathsToDensity.webm" type="video/webm"
+                media="(prefers-color-scheme: light)">
+              <source src="assets/videos/dark/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4"
+                media="(prefers-color-scheme: dark)">
+              <source src="assets/videos/light/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4"
+                media="(prefers-color-scheme: light)">
+              <source src="assets/videos/light/sde_animation/720p60/EnsemblePathsToDensity.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+            <figcaption>Neural Stochastic Flows enable direct sampling from conditional densities without iterative solvers.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="approach">
+      <div class="panel">
+        <h2>Modelling Weak Solutions (Conditional Densities) of SDEs</h2>
+        <p>As we describe in the paper, NSFs are designed to fulfil the following inherited properties of <em>stochastic
+            flows</em> when viewed as weak solutions. Here, we define the NSF transition density
+          $p_\boldsymbol{\theta}(\boldsymbol{x}_t \mid \boldsymbol{x}_s; s, \Delta t)$, where $\boldsymbol{x}_s$ and
+          $\boldsymbol{x}_t$ are states at times $s$ and $t$ with $s < t$, and $\Delta t :=t - s$ is the time gap.</p>
+            <ol class="flow-list">
+              <li>
+                <span class="flow-badge">1</span>
+                <div>
+                  <strong>Independence.</strong>
+                  <p>For any $0 \le t_1 \le \dots \le t_n$, the conditionals
+                    $p_\boldsymbol{\theta}(\boldsymbol{x}_{t_{k+1}}\mid \boldsymbol{x}_{t_k}; t_k, t_{k+1}-t_k)$ are
+                    independent.</p>
+                  <p class="table-note">Realised by the <a href="#architecture">architecture</a>: each transition
+                    conditions only on $(\boldsymbol{x}_s, s, \Delta t)$ and draws independent Gaussian noise.</p>
+                </div>
+              </li>
+              <li>
+                <span class="flow-badge">2</span>
+                <div>
+                  <strong>Identity.</strong>
+                  <p>Evaluating at zero gap recovers the input state: $p_\boldsymbol{\theta}(\boldsymbol{x}_t \mid
+                    \boldsymbol{x}_s; s, 0) = \delta(\boldsymbol{x}_t - \boldsymbol{x}_s)$.</p>
+                  <p class="table-note">Realised by the <a href="#architecture">architecture</a>: we design the base
+                    distribution and coupling layers to collapse to the identity as $\Delta t\to 0$.</p>
+                </div>
+              </li>
+              <li>
+                <span class="flow-badge">3</span>
+                <div>
+                  <strong>Flow property.</strong>
+                  <p>For any $0 \le t_1 \le \dots \le t_n$, the transition density satisfies the Chapman–Kolmogorov
+                    property:</p>
+                  <div class="math-block">
+                    \[
+                    p_\boldsymbol{\theta}(\boldsymbol{x}_{t_k} \mid \boldsymbol{x}_{t_i}; t_i, t_k - t_i) = \int
+                    p_\boldsymbol{\theta}(\boldsymbol{x}_{t_k} \mid \boldsymbol{x}_{t_j}; t_j, t_k - t_j)\,
+                    p_\boldsymbol{\theta}(\boldsymbol{x}_{t_j} \mid \boldsymbol{x}_{t_i}; t_i, t_j -
+                    t_i)\,\mathrm{d}\boldsymbol{x}_{t_j}.
+                    \]
+                  </div>
+                  <p class="table-note">Shaped by the bidirectional flow regulariser introduced in <a
+                      href="#flow-consistency">Flow Consistency Regularisation</a>.</p>
+                </div>
+              </li>
+              <li>
+                <span class="flow-badge">4</span>
+                <div>
+                  <strong>Stationarity (autonomous SDEs).</strong>
+                  <p>When the underlying SDE is time-homogeneous, $p_\boldsymbol{\theta}(\boldsymbol{x}_{t_j}\mid
+                    \boldsymbol{x}_s; t_i, t_j - t_i)$ depends on the gap only:
+                    $p_\boldsymbol{\theta}(\boldsymbol{x}_{t_j}\mid \boldsymbol{x}_s; t_i, t_j -
+                    t_i)=p_\boldsymbol{\theta}(\boldsymbol{x}_{t_j+r}\mid \boldsymbol{x}_s; t_i + r, t_j - t_i)$.</p>
+                  <p class="table-note">Realised by the <a href="#architecture">architecture</a>: for autonomous SDEs we
+                    drop the absolute time $t_i$ from the conditioner so the transition depends only on the gap.</p>
+                </div>
+              </li>
+            </ol>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="panel">
+        <h2>Architecture of Neural Stochastic Flows</h2>
+        <p>Let $\boldsymbol{c} := (\boldsymbol{x}_{t_i}, \Delta t, t_i)$ denote the conditioning parameters, where $t_i$
+          is included only for non-autonomous systems and omitted otherwise, and let $\Delta t := t_j-t_i$. We
+          instantiate the sampling procedure of the flow distribution as</p>
+        <div class="math-block">
+          \[
+          \boldsymbol{z} = \underbrace{\boldsymbol{x}_{t_i} + \Delta t \cdot
+          \text{MLP}_\mu(\boldsymbol{c};\boldsymbol{\theta}_\mu)}_{\boldsymbol{\mu}(\boldsymbol{c})} +
+          \underbrace{\sqrt{\Delta
+          t}\cdot\text{MLP}_\sigma(\boldsymbol{c};\boldsymbol{\theta}_\sigma)}_{\boldsymbol{\sigma}(\boldsymbol{c})}
+          \odot \,\boldsymbol{\varepsilon}, \quad \boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0},
+          \boldsymbol{I}),
+          \]
+        </div>
+        <div class="math-block">
+          \[
+          \boldsymbol{x}_{t_j} = \boldsymbol{f}_{\boldsymbol{\theta}}(\boldsymbol{z}, \boldsymbol{c}) =
+          \boldsymbol{f}_{L}(\cdot;\boldsymbol{c}, \boldsymbol{\theta}_L) \circ
+          \boldsymbol{f}_{L-1}(\cdot;\boldsymbol{c}, \boldsymbol{\theta}_{L-1}) \circ \cdots \circ
+          \boldsymbol{f}_{1}(\boldsymbol{z};\boldsymbol{c}, \boldsymbol{\theta}_1).
+          \]
+        </div>
+        <p>Our architecture integrates a parametric Gaussian initialisation with a sequence of bijective
+          transformations. The state-dependent Gaussian, centred at $\boldsymbol{\mu}(\boldsymbol{c})$ with noise scale
+          $\boldsymbol{\sigma}(\boldsymbol{c})$, follows the similar form to the Euler–Maruyama discretisation with
+          drift scaled by $\Delta t$ and diffusion by $\sqrt{\Delta t}$. The subsequent bijective transformations
+          $\boldsymbol{f}_1$ through $\boldsymbol{f}_L$ are implemented as conditioned coupling flows whose parameters
+          depend on $\boldsymbol{c}$. Each layer splits the state $\boldsymbol{z}$ into two partitions
+          $(\boldsymbol{z}_\text{A},\boldsymbol{z}_\text{B})$ and applies an affine update to one partition conditioned
+          on the other and on $\boldsymbol{c}$:</p>
+        <div class="math-block">
+          \[
+          \boldsymbol{f}_{ i}(\boldsymbol{z};\boldsymbol{c},\boldsymbol{\theta}_i) =
+          \mathrm{Concat}\!\left(\boldsymbol{z}_\text{A},\boldsymbol{z}_\text{B} \odot \exp\!\big(\Delta
+          t\,\text{MLP}^{(i)}_{\text{scale}}(\boldsymbol{z}_\text{A},\boldsymbol{c};\boldsymbol{\theta}_\text{scale}^{(i)})\big)
+          + \Delta
+          t\,\text{MLP}^{(i)}_{\text{shift}}(\boldsymbol{z}_\text{A},\boldsymbol{c};\boldsymbol{\theta}_\text{shift}^{(i)})\right),
+          \]
+        </div>
+        <p>with alternating partitions across layers. The explicit $\Delta t$ factor ensures
+          $\boldsymbol{f}_i(\boldsymbol{z};\boldsymbol{c}, \boldsymbol{\theta}_i) = \boldsymbol{z}$ when $\Delta t=0$
+          and, combined with the form of the base Gaussian, preserves the identity at zero time gap. Stacking such
+          layers yields an expressive diffeomorphism while keeping the Jacobian log-determinant tractable for loss
+          computation.</p>
+
+        <h3>Inherited Properties</h3>
+        <ul class="checks">
+          <li>
+            <div class="check-line">
+              <span class="check">✓</span>
+              <div>
+                <strong>Independence.</strong>
+                <p>Ensured by the conditional sampling on the initial state $\boldsymbol{x}_{t_i}$ without any overlap
+                  between the transitions.</p>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="check-line">
+              <span class="check">✓</span>
+              <div>
+                <strong>Identity.</strong>
+                <p>The explicit $\Delta t$ factor in both the base Gaussian and coupling layers ensures
+                  $p_\boldsymbol{\theta}(\boldsymbol{x}_t \mid \boldsymbol{x}_s; s, 0) = \delta(\boldsymbol{x}_t -
+                  \boldsymbol{x}_s)$.</p>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="check-line">
+              <span class="check">✓</span>
+              <div>
+                <strong>Stationarity (autonomous SDEs).</strong>
+                <p>Obtained by omitting $t_i$ from $\boldsymbol{c}$ when modelling autonomous SDEs.</p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="flow-consistency">
+      <div class="panel">
+        <h2>Regularisation for Flow Property</h2>
+        <div class="two">
+          <div>
+            <p>To guarantee that recursive application of NSF matches its one-step predictions, we optimise a
+              bidirectional KL flow loss that enforces the flow property (Chapman–Kolmogorov property):</p>
+            <div class="math-block">
+              \[
+              p_\boldsymbol{\theta}(\boldsymbol{x}_{t_k} \mid \boldsymbol{x}_{t_i}; t_i, t_k - t_i) = \int
+              p_\boldsymbol{\theta}(\boldsymbol{x}_{t_k} \mid \boldsymbol{x}_{t_j}; t_j, t_k - t_j)\,
+              p_\boldsymbol{\theta}(\boldsymbol{x}_{t_j} \mid \boldsymbol{x}_{t_i}; t_i, t_j -
+              t_i)\,\mathrm{d}\boldsymbol{x}_{t_j}.
+              \]
+            </div>
+            <p>To enforce this property, we minimise the discrepancy between the direct one-step transition (LHS) and
+              the two-step transition through an intermediate state (RHS).</p>
+          </div>
+          <figure class="video-frame">
+            <video controls playsinline preload="metadata"
+              data-poster-light="assets/posters/ChapmanKolmogorovConsistency-light.jpg"
+              data-poster-dark="assets/posters/ChapmanKolmogorovConsistency-dark.jpg">
+              <source src="assets/videos/dark/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm"
+                media="(prefers-color-scheme: dark)">
+              <source src="assets/videos/light/sde_animation/720p60/ChapmanKolmogorovConsistency.webm" type="video/webm"
+                media="(prefers-color-scheme: light)">
+              <source src="assets/videos/dark/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4"
+                media="(prefers-color-scheme: dark)">
+              <source src="assets/videos/light/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4"
+                media="(prefers-color-scheme: light)">
+              <source src="assets/videos/light/sde_animation/720p60/ChapmanKolmogorovConsistency.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+            <figcaption>Flow-consistency loss guides alignment between one-step and two-step transitions.</figcaption>
+          </figure>
+          <div>
+            <p>Several candidates exist such as
+              optimal-transport/Wasserstein, Stein, adversarial, and kernel MMD. Among them, we choose KL
+              divergences because we can minimise the upper-bounds of the KL divergences in a tractable way, and
+              since KL is asymmetric, we use both directions.</p>
+            <p>Direct KLs remain intractable due to the marginalisation over the intermediate state
+              $\boldsymbol{x}_{t_j}$ on the two-step side. Therefore, we introduce a bridge distribution
+              $b_\boldsymbol{\xi}(\boldsymbol{x}_{t_j}\mid\boldsymbol{x}_{t_i},\boldsymbol{x}_{t_k})$ as an auxiliary
+              variational distribution (<a href="https://doi.org/10.1007/978-3-540-30499-9_86" target="_blank"
+                rel="noopener">Agakov and Barber, 2004</a>; <a href="https://arxiv.org/abs/1511.02386" target="_blank"
+                rel="noopener">Ranganath et&nbsp;al., 2016</a>; <a href="https://arxiv.org/abs/1410.6460"
+                target="_blank" rel="noopener">Salimans et&nbsp;al., 2015</a>) and optimise variational upper bounds for
+              both directions.</p>
+            <p>Specifically, for the forward KL (one-step to two-step), we have the upper bound:</p>
+            <div class="math-block">
+              \[
+              \mathcal{L}_{\text{flow, 1-to-2}} = \mathop{\mathbb{E}}_{p_\boldsymbol{\theta}(\boldsymbol{x}_{t_k}\mid
+              \boldsymbol{x}_{t_i})b_\boldsymbol{\xi}(\boldsymbol{x}_{t_j}\mid \boldsymbol{x}_{t_i},
+              \boldsymbol{x}_{t_k})}\left[\log \frac{p_\boldsymbol{\theta}\left(\boldsymbol{x}_{t_k} \mid
+              \boldsymbol{x}_{t_i}\right) \, b_\boldsymbol{\xi}\left(\boldsymbol{x}_{t_j} \mid \boldsymbol{x}_{t_i},
+              \boldsymbol{x}_{t_k}\right)}{p_\boldsymbol{\theta}\left(\boldsymbol{x}_{t_k} \mid
+              \boldsymbol{x}_{t_j}\right) \, p_\boldsymbol{\theta}\left(\boldsymbol{x}_{t_j} \mid
+              \boldsymbol{x}_{t_i}\right)}\right].
+              \]
+            </div>
+            <p>And for the reverse KL (two-step to one-step), we have the upper bound:</p>
+            <div class="math-block">
+              \[
+              \mathcal{L}_{\text{flow, 2-to-1}} = \mathop{\mathbb{E}}_{p_\boldsymbol{\theta}(\boldsymbol{x}_{t_j}\mid
+              \boldsymbol{x}_{t_i})p_\boldsymbol{\theta}(\boldsymbol{x}_{t_k} \mid \boldsymbol{x}_{t_j})}\left[\log
+              \frac{p_\boldsymbol{\theta}\left(\boldsymbol{x}_{t_j} \mid \boldsymbol{x}_{t_i}\right) \,
+              p_\boldsymbol{\theta}\left(\boldsymbol{x}_{t_k} \mid
+              \boldsymbol{x}_{t_j}\right)}{b_\boldsymbol{\xi}\left(\boldsymbol{x}_{t_j} \mid \boldsymbol{x}_{t_i},
+              \boldsymbol{x}_{t_k}\right) \, p_\boldsymbol{\theta}\left(\boldsymbol{x}_{t_k} \mid
+              \boldsymbol{x}_{t_i}\right)}\right].
+              \]
+            </div>
+            <p>The total flow-consistency loss, incorporated as a weighted regulariser alongside the main negative
+              log-likelihood objective, is the sum of the two KL divergences:</p>
+            <div class="math-block">
+              \[
+              \mathcal{L}_{\text{flow}} = \mathcal{L}_{\text{flow, 1-to-2}} + \mathcal{L}_{\text{flow, 2-to-1}}.
+              \]
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="latent">
+      <div class="panel">
+        <h2>Latent Neural Stochastic Flows</h2>
+        <p>Irregularly-sampled real-world sequences seldom expose the full system state; instead we observe noisy
+          measurements $\boldsymbol{o}_{t_i}$ at times $0 = t_0 < t_1 < \dots < t_T$. To model the hidden
+            continuous-time dynamics while remaining solver-free, we introduce the <strong>Latent Neural Stochastic
+            Flows (Latent NSFs)</strong> as variational state-space models (VSSMs; <a
+              href="https://arxiv.org/abs/1506.02216" target="_blank" rel="noopener">Chung et&nbsp;al., 2015</a>; <a
+              href="https://doi.org/10.1609/aaai.v31i1.10779" target="_blank" rel="noopener">Krishnan et&nbsp;al.,
+              2017</a>; <a href="https://arxiv.org/abs/1603.06277" target="_blank" rel="noopener">Johnson et&nbsp;al.,
+              2016</a>; <a href="https://arxiv.org/abs/1605.06432" target="_blank" rel="noopener">Karl et&nbsp;al.,
+              2017</a>) that extend the variational autoencoder framework (<a href="https://arxiv.org/abs/1312.6114"
+              target="_blank" rel="noopener">Kingma and Welling, 2014</a>; <a href="https://arxiv.org/abs/1401.4082"
+              target="_blank" rel="noopener">Rezende et&nbsp;al., 2014</a>) with NSF transition kernels.</p>
+        <div class="image-grid">
+          <figure>
+            <img src="assets/images/latent/vssm.svg" alt="Graphical model for a standard variational state-space model"
+              loading="lazy" />
+            <figcaption>Standard VSSM: discrete-time latent transitions.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/images/latent/latent_nsf.svg" alt="Graphical model for latent Neural Stochastic Flows"
+              loading="lazy" />
+            <figcaption>Latent NSF: solver-free continuous-time transitions parameterised by \(\Delta t\).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/images/latent/skip_kl.svg" alt="Skip KL objective for latent Neural Stochastic Flows"
+              loading="lazy" />
+            <figcaption>Skip-KL objective compares direct transitions with recursively generated ones.</figcaption>
+          </figure>
+        </div>
+        <div class="panel-text">
+          <h3>Generative model</h3>
+          <p>Let $\boldsymbol{x}_{t_i} \in \mathbb{R}^d$ denote the latent state at time $t_i$, let
+            $\boldsymbol{o}_{t_i}$ be the corresponding observation, and define $\Delta t_i := t_i - t_{i-1}$. The joint
+            distribution factorises as</p>
+          <div class="math-block">
+            \[
+            \begin{aligned}
+            p_{\boldsymbol{\theta},\boldsymbol{\psi}}\bigl(\boldsymbol{x}_{t_{0:T}},\boldsymbol{o}_{t_{0:T}}\bigr)
+            &=
+            p_{\boldsymbol{\theta}}\!\left(\boldsymbol{x}_{t_0}\right)
+            \prod_{i=1}^{T}
+            p_{\boldsymbol{\theta}}\!\left(
+            \boldsymbol{x}_{t_i}\mid \boldsymbol{x}_{t_{i-1}};
+            t_{i-1},\Delta t_i
+            \right)
+            p_{\boldsymbol{\psi}}\!\left(
+            \boldsymbol{o}_{t_i}\mid \boldsymbol{x}_{t_i}
+            \right),
+            \end{aligned}
+            \]
+          </div>
+          <p class="table-note">Here $p_{\boldsymbol{\theta}}(\boldsymbol{x}_{t_i}\mid \boldsymbol{x}_{t_{i-1}};
+            t_{i-1},\Delta t_i)$ is an NSF transition density that admits arbitrary $\Delta t_i$ without numerical
+            integration, $p_{\boldsymbol{\psi}}(\boldsymbol{o}_{t_i}\mid \boldsymbol{x}_{t_i})$ is the observation
+            decoder, and $p_{\boldsymbol{\theta}}(\boldsymbol{x}_{t_0})$ is an initial prior over the state.</p>
+
+          <h3>Variational posterior</h3>
+          <p>For the inference model, we employ a gated recurrent unit encoder (<a
+              href="https://doi.org/10.3115/v1/D14-1179" target="_blank" rel="noopener">Cho et&nbsp;al., 2014</a>) that
+            processes the observation sequence:</p>
+          <div class="math-block">
+            \[
+            q_{\boldsymbol{\phi}}\!\left(
+            \boldsymbol{x}_{t_{0:T}}\mid \boldsymbol{o}_{\le t_T}
+            \right)
+            =
+            \prod_{i=0}^{T}
+            \mathcal{N}\!\left(
+            \boldsymbol{x}_{t_i}\mid
+            \boldsymbol{m}_{t_i},
+            \operatorname{diag}\!\left(\boldsymbol{s}_{t_i}^{2}\right)
+            \right),
+            \]
+          </div>
+          <div class="math-block">
+            \[
+            (\boldsymbol{m}_{t_i},\boldsymbol{s}_{t_i})
+            =
+            \mathrm{GRU}_{\boldsymbol{\phi}}\!\left(
+            [\boldsymbol{o}_{t_i},\Delta t_i,t_i],
+            \boldsymbol{h}_{t_{i-1}}
+            \right),
+            \]
+          </div>
+          <p class="table-note">The hidden state is initialised as $\boldsymbol{h}_{t_{-1}} = \boldsymbol{0}$. Absolute
+            time $t_i$ is included only for non-autonomous systems; for autonomous SDEs the encoder conditions on
+            $[\boldsymbol{o}_{t_i}, \Delta t_i]$.</p>
+
+          <h3>Learning objective</h3>
+          <p>Our goal is to train the generative model
+            $p_{\boldsymbol{\theta},\boldsymbol{\psi}}\bigl(\boldsymbol{x}_{t_{0:T}},\boldsymbol{o}_{t_{0:T}}\bigr)$ and
+            the inference model $q_{\boldsymbol{\phi}}(\boldsymbol{x}_{t_{0:T}}\mid \boldsymbol{o}_{\le t_T})$. A
+            standard choice is the $\beta$-weighted negative ELBO ($\beta$-NELBO) loss (<a
+              href="https://openreview.net/forum?id=Sy2fzU9gl" target="_blank" rel="noopener">Higgins et&nbsp;al.,
+              2017</a>):</p>
+          <div class="math-block">
+            \[
+            \mathcal{L}_{\beta\text{-NELBO}}
+            =
+            \sum_{i=0}^{T}
+            \Bigl[
+            -\,\mathop{\mathbb{E}}_{q_{\boldsymbol{\phi}}}
+            \bigl[
+            \log
+            p_{\boldsymbol{\psi}}(\boldsymbol{o}_{t_i}\mid \boldsymbol{x}_{t_i})
+            \bigr]
+            +
+            \beta
+            \mathrm{KL}\bigl(
+            q_{\boldsymbol{\phi}}(\boldsymbol{x}_{t_i}\mid \boldsymbol{o}_{\le t_i})
+            \,\|\,
+            p_{\boldsymbol{\theta}}(\boldsymbol{x}_{t_i}\mid \boldsymbol{x}_{t_{i-1}})
+            \bigr)
+            \Bigr],
+            \]
+          </div>
+          <p class="table-note">The expectation is over $q_{\boldsymbol{\phi}}(\boldsymbol{x}_{t_i}\mid
+            \boldsymbol{o}_{\le t_i})$ and $\mathrm{KL}(\cdot\|\cdot)$ denotes the Kullback–Leibler divergence.</p>
+          <p>Focusing only on adjacent time steps can accumulate error over long horizons, so we introduce a skip-ahead
+            KL divergence loss (rightmost panel above), akin to latent overshooting (<a
+              href="https://arxiv.org/abs/1811.04551" target="_blank" rel="noopener">Hafner et&nbsp;al., 2019</a>):</p>
+          <div class="math-block">
+            \[
+            \mathcal{L}_{\text{skip}} = \sum_{i=0}^{T-\tau}
+            \mathop{\mathbb{E}}_{j \sim \mathcal{U}\{i+2,\,i+\tau\}}
+            \Bigl[
+            \mathrm{KL}\bigl(
+            q_{\boldsymbol{\phi}}(\boldsymbol{x}_{t_j}\mid \boldsymbol{o}_{\le t_j})
+            \,\|\,
+            p_{\boldsymbol{\theta}}(\boldsymbol{x}_{t_j}\mid \boldsymbol{x}_{t_i})
+            \bigr)
+            \Bigr].
+            \]
+          </div>
+          <p class="table-note">Here $\mathcal{U}\{i+2,\,i+\tau\}$ denotes the discrete uniform distribution over
+            indices $\{i+2,\dots,i+\tau\}$ with $\tau \ge 2$. Latent NSF transitions permit direct sampling across
+            arbitrary time gaps, making this objective efficient to evaluate.</p>
+          <p>Combining the skip-ahead loss with the flow-consistency loss $\mathcal{L}_{\text{flow}}$ yields the total
+            loss:</p>
+          <div class="math-block">
+            \[
+            \mathcal{L}_{\text{total}} = \mathcal{L}_{\beta\text{-NELBO}} + \lambda\,\mathcal{L}_{\text{flow}} +
+            \beta_{\text{skip}}\,\mathcal{L}_{\text{skip}},
+            \]
+          </div>
+          <p class="table-note">The hyperparameters $\lambda$ and $\beta_{\text{skip}}$ control the strengths of the
+            flow-consistency and skip-ahead KL divergence losses, respectively; $\beta$ weights the latent KL in the
+            $\beta$-NELBO.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="results">
+      <div class="panel">
+        <h2>Results</h2>
+
+        <p>Detailed experimental configurations are documented in the paper.</p>
+
+        <div class="results-toolbar">
+          <button class="btn small" type="button" onclick="toggleAll(true)">Expand all</button>
+          <button class="btn small" type="button" onclick="toggleAll(false)">Collapse all</button>
+        </div>
+
+        <div class="results-accordion">
+
+          <!-- 1) Stochastic Lorenz -->
+          <details id="lorenz">
+            <summary>
+              <span class="summary-left">
+                <span class="chev">›</span>
+                Stochastic Lorenz Attractor
+              </span>
+              <span class="summary-right">KL vs Compute • Figures & Table</span>
+            </summary>
+            <div class="panel-inner">
+              <div class="result-block">
+                <p>NSF matches the ground-truth attractor while remaining solver-free. Independent one-step samples stay
+                  on the correct manifold, unlike solver-based neural SDEs that either diffuse or collapse when rolled
+                  forward.</p>
+                <div class="image-grid">
+                  <figure>
+                    <img src="assets/images/lorenz/lorenz_gt.png" alt="Ground-truth Lorenz trajectories"
+                      loading="lazy" />
+                    <figcaption>Ground truth samples</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="assets/images/lorenz/lorenz_latentsde.png" alt="Latent SDE trajectories for Lorenz"
+                      loading="lazy" />
+                    <figcaption>Latent SDE baseline</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="assets/images/lorenz/lorenz_sdematching.png" alt="SDE matching trajectories for Lorenz"
+                      loading="lazy" />
+                    <figcaption>SDE matching baseline</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="assets/images/lorenz/lorenz_nsf1.png" alt="NSF trajectories for Lorenz" loading="lazy" />
+                    <figcaption>NSF (one-step)</figcaption>
+                  </figure>
+                </div>
+                <table class="result-table">
+                  <caption>KL divergence vs. compute on Lorenz (lower is better).</caption>
+                  <thead>
+                    <tr>
+                      <th rowspan="2">Method</th>
+                      <th colspan="2">t = 0.25</th>
+                      <th colspan="2">t = 0.5</th>
+                      <th colspan="2">t = 0.75</th>
+                      <th colspan="2">t = 1.0</th>
+                    </tr>
+                    <tr>
+                      <th>KL ↓</th>
+                      <th>kFLOPs ↓</th>
+                      <th>KL ↓</th>
+                      <th>kFLOPs ↓</th>
+                      <th>KL ↓</th>
+                      <th>kFLOPs ↓</th>
+                      <th>KL ↓</th>
+                      <th>kFLOPs ↓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Latent SDE (<a href="https://arxiv.org/abs/2001.01328" target="_blank" rel="noopener">Li
+                          et&nbsp;al., 2020</a>)</td>
+                      <td>2.1 &plusmn; 0.9</td>
+                      <td>959</td>
+                      <td>1.8 &plusmn; 0.1</td>
+                      <td>1,917</td>
+                      <td>0.9 &plusmn; 0.3</td>
+                      <td>2,839</td>
+                      <td>1.5 &plusmn; 0.5</td>
+                      <td>3,760</td>
+                    </tr>
+                    <tr>
+                      <td>Neural LSDE (<a href="https://arxiv.org/abs/2402.14989" target="_blank" rel="noopener">Oh
+                          et&nbsp;al., 2024</a>)</td>
+                      <td>1.3 &plusmn; 0.4</td>
+                      <td>1,712</td>
+                      <td>7.2 &plusmn; 1.4</td>
+                      <td>3,416</td>
+                      <td>74.5 &plusmn; 24.6</td>
+                      <td>5,057</td>
+                      <td>53.1 &plusmn; 29.3</td>
+                      <td>6,699</td>
+                    </tr>
+                    <tr>
+                      <td>Neural GSDE (<a href="https://arxiv.org/abs/2402.14989" target="_blank" rel="noopener">Oh
+                          et&nbsp;al., 2024</a>)</td>
+                      <td>1.2 &plusmn; 0.4</td>
+                      <td>1,925</td>
+                      <td>3.9 &plusmn; 0.3</td>
+                      <td>3,848</td>
+                      <td>20.2 &plusmn; 7.6</td>
+                      <td>5,698</td>
+                      <td>14.1 &plusmn; 8.4</td>
+                      <td>7,548</td>
+                    </tr>
+                    <tr>
+                      <td>Neural LNSDE (<a href="https://arxiv.org/abs/2402.14989" target="_blank" rel="noopener">Oh
+                          et&nbsp;al., 2024</a>)</td>
+                      <td>1.7 &plusmn; 0.4</td>
+                      <td>1,925</td>
+                      <td>4.6 &plusmn; 0.7</td>
+                      <td>3,848</td>
+                      <td>57.3 &plusmn; 16.4</td>
+                      <td>5,698</td>
+                      <td>44.6 &plusmn; 23.4</td>
+                      <td>7,548</td>
+                    </tr>
+                    <tr class="method-group">
+                      <td colspan="9">SDE matching (<a href="https://arxiv.org/abs/2502.02472" target="_blank"
+                          rel="noopener">Bartosh et&nbsp;al., 2024</a>)</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">&Delta; t = 0.0001</td>
+                      <td>4.3 &plusmn; 0.7</td>
+                      <td>184,394</td>
+                      <td>5.3 &plusmn; 1.0</td>
+                      <td>368,787</td>
+                      <td>3.4 &plusmn; 0.8</td>
+                      <td>553,034</td>
+                      <td>3.8 &plusmn; 1.0</td>
+                      <td>737,354</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">&Delta; t = 0.01</td>
+                      <td>6.3 &plusmn; 0.4</td>
+                      <td>1,917</td>
+                      <td>11.7 &plusmn; 0.5</td>
+                      <td>3,834</td>
+                      <td>7.9 &plusmn; 0.3</td>
+                      <td>5,677</td>
+                      <td>6.0 &plusmn; 0.3</td>
+                      <td>7,520</td>
+                    </tr>
+                    <tr class="method-group">
+                      <td colspan="9">NSF (ours)</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">$ \mathcal{H}_{\mathrm{pred}} = 1.0$</td>
+                      <td>0.8 &plusmn; 0.7</td>
+                      <td>53</td>
+                      <td>1.3 &plusmn; 0.1</td>
+                      <td>53</td>
+                      <td>0.6 &plusmn; 0.3</td>
+                      <td>53</td>
+                      <td>0.2 &plusmn; 0.6</td>
+                      <td>53</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">$ \mathcal{H}_{\mathrm{pred}} = 0.5$</td>
+                      <td>2.4 &plusmn; 1.9</td>
+                      <td>53</td>
+                      <td>1.3 &plusmn; 0.1</td>
+                      <td>53</td>
+                      <td>1.0 &plusmn; 0.4</td>
+                      <td>105</td>
+                      <td>1.7 &plusmn; 1.1</td>
+                      <td>105</td>
+                    </tr>
+                    <tr>
+                      <td class="subrow">$ \mathcal{H}_{\mathrm{pred}} = 0.25$</td>
+                      <td>1.2 &plusmn; 0.7</td>
+                      <td>53</td>
+                      <td>1.2 &plusmn; 0.1</td>
+                      <td>105</td>
+                      <td>0.8 &plusmn; 0.4</td>
+                      <td>156</td>
+                      <td>1.3 &plusmn; 0.8</td>
+                      <td>208</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="table-note">Average runtime per 100 samples (JAX): latent SDE 124&ndash;148&nbsp;ms; NSF
+                  0.3&nbsp;ms.</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- 2) CMU Mocap -->
+          <details id="mocap">
+            <summary>
+              <span class="summary-left">
+                <span class="chev">›</span>
+                CMU Motion Capture
+              </span>
+              <span class="summary-right">Test MSE • Trade-off Plot</span>
+            </summary>
+            <div class="panel-inner">
+              <div class="result-block">
+                <p>Latent NSF delivers the strongest extrapolation accuracy while remaining orders of magnitude faster
+                  than solver-based latent SDEs. Setup&nbsp;1 evaluates within-horizon forecasting, and Setup&nbsp;2
+                  withholds the final third of each sequence during training.</p>
+                <table class="result-table">
+                  <caption>Test MSE (95% confidence interval) on CMU Motion Capture.</caption>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Setup&nbsp;1</th>
+                      <th>Setup&nbsp;2</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>npODE (<a href="https://arxiv.org/abs/1803.04303" target="_blank" rel="noopener">Heinonen
+                          et&nbsp;al., 2018</a>)</td>
+                      <td>22.96<sup>†</sup></td>
+                      <td>&mdash;</td>
+                    </tr>
+                    <tr>
+                      <td>Neural ODE (<a href="https://arxiv.org/abs/1806.07366" target="_blank" rel="noopener">Chen
+                          et&nbsp;al., 2018</a>)</td>
+                      <td>22.49 &plusmn; 0.88<sup>†</sup></td>
+                      <td>&mdash;</td>
+                    </tr>
+                    <tr>
+                      <td>ODE2VAE-KL (<a href="https://arxiv.org/abs/1905.10994" target="_blank" rel="noopener">Yildiz
+                          et&nbsp;al., 2019</a>)</td>
+                      <td>8.09 &plusmn; 1.95<sup>†</sup></td>
+                      <td>&mdash;</td>
+                    </tr>
+                    <tr>
+                      <td>Latent ODE (<a href="https://arxiv.org/abs/1907.03907" target="_blank" rel="noopener">Rubanova
+                          et&nbsp;al., 2019</a>)</td>
+                      <td>5.98 &plusmn; 0.28<sup>*</sup></td>
+                      <td>31.62 &plusmn; 0.05<sup>§</sup></td>
+                    </tr>
+                    <tr>
+                      <td>Latent SDE (<a href="https://arxiv.org/abs/2001.01328" target="_blank" rel="noopener">Li
+                          et&nbsp;al., 2020</a>)</td>
+                      <td>12.91 &plusmn; 2.90<sup>♠</sup></td>
+                      <td>9.52 &plusmn; 0.21<sup>§</sup></td>
+                    </tr>
+                    <tr>
+                      <td>Latent Approx SDE (<a href="https://arxiv.org/abs/2110.15739" target="_blank"
+                          rel="noopener">Solin et&nbsp;al., 2021</a>)</td>
+                      <td>7.55 &plusmn; 0.05<sup>§</sup></td>
+                      <td>10.50 &plusmn; 0.86<sup>§</sup></td>
+                    </tr>
+                    <tr>
+                      <td>ARCTA (<a href="https://arxiv.org/abs/2312.10550" target="_blank" rel="noopener">Course
+                          et&nbsp;al., 2023</a>)</td>
+                      <td>7.62 &plusmn; 0.93<sup>‡</sup></td>
+                      <td>9.92 &plusmn; 1.82</td>
+                    </tr>
+                    <tr>
+                      <td>NCDSSM (<a href="https://arxiv.org/abs/2301.11308" target="_blank" rel="noopener">Ansari
+                          et&nbsp;al., 2023</a>)</td>
+                      <td>5.69 &plusmn; 0.01<sup>§</sup></td>
+                      <td>4.74 &plusmn; 0.01<sup>§</sup></td>
+                    </tr>
+                    <tr>
+                      <td>SDE matching (<a href="https://arxiv.org/abs/2502.02472" target="_blank"
+                          rel="noopener">Bartosh et&nbsp;al., 2024</a>)</td>
+                      <td><strong>5.20 &plusmn; 0.43</strong><sup>♣</sup></td>
+                      <td>4.26 &plusmn; 0.35</td>
+                    </tr>
+                    <tr>
+                      <td>Latent NSF (ours)</td>
+                      <td>8.62 &plusmn; 0.32</td>
+                      <td><strong>3.41 &plusmn; 0.27</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="table-note">† reported by Yildiz et&nbsp;al. (2019); * reported by Rubanova et&nbsp;al.
+                  (2019); ‡ reported by Course et&nbsp;al. (2023); § reported by Ansari et&nbsp;al. (2023); ♠ our
+                  reproduction of Li et&nbsp;al. (2020) <span aria-hidden="true">&mdash;</span> code: <a
+                    href="https://github.com/nkiyohara/latent-sde-mocap" target="_blank"
+                    rel="noopener">latent-sde-mocap</a>; ♣ our reproduction of Bartosh et&nbsp;al. (2024) <span
+                    aria-hidden="true">&mdash;</span> code: <a href="https://github.com/nkiyohara/sde-matching-mocap"
+                    target="_blank" rel="noopener">sde-matching-mocap</a>.</p>
+                <p class="table-note">Runtime per 100 samples (JAX): latent SDE 75&nbsp;ms vs. Latent NSF 3.5&nbsp;ms.
+                </p>
+                <figure class="result-figure">
+                  <img src="assets/images/mocap_tradeoff.svg" alt="Runtime-accuracy trade-off on CMU Motion Capture"
+                    loading="lazy" />
+                  <figcaption>Latent NSF dominates the runtime/accuracy frontier on both forecasting (left) and
+                    extrapolation (right) protocols.</figcaption>
+                </figure>
+              </div>
+            </div>
+          </details>
+
+          <!-- 3) Stochastic Moving MNIST -->
+          <details id="smmnist">
+            <summary>
+              <span class="summary-left">
+                <span class="chev">›</span>
+                Stochastic Moving MNIST
+              </span>
+              <span class="summary-right">FD Metrics • Grids</span>
+            </summary>
+            <div class="panel-inner">
+              <div class="result-block">
+                <p>On video forecasting, Latent NSF preserves appearance quality while modelling stochastic futures.
+                  One-step sampling excels on static structure, and recursive rollout remains competitive on dynamics.
+                </p>
+                <table class="result-table">
+                  <caption>Fr&eacute;chet distance (FD) on Stochastic Moving MNIST.</caption>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Static FD ↓</th>
+                      <th>Dynamics FD ↓</th>
+                      <th>Frame-wise FD ↓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Latent SDE</td>
+                      <td>2.66 &plusmn; 0.87</td>
+                      <td>5.39 &plusmn; 3.10</td>
+                      <td><strong>0.58 &plusmn; 0.21</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Latent NSF (recursive)</td>
+                      <td>2.36 &plusmn; 0.60</td>
+                      <td>7.76 &plusmn; 2.56</td>
+                      <td>0.63 &plusmn; 0.17</td>
+                    </tr>
+                    <tr>
+                      <td>Latent NSF (one-step)</td>
+                      <td><strong>1.67 &plusmn; 0.47</strong></td>
+                      <td>--</td>
+                      <td>0.63 &plusmn; 0.15</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="table-note">Dynamics FD is undefined for one-step NSF because it predicts the marginal
+                  distribution rather than multi-step trajectories.</p>
+                <figure class="result-figure small">
+                  <img src="assets/images/smmnist_fd.svg" alt="Fréchet distance comparison on Stochastic Moving MNIST"
+                    loading="lazy" />
+                  <figcaption>Latent NSF improves static fidelity while maintaining competitive frame-wise quality;
+                    recursive rollout remains close on dynamics.</figcaption>
+                </figure>
+                <div class="image-grid">
+                  <figure>
+                    <img src="assets/images/smmnist/ground_truth_grid.png"
+                      alt="Ground-truth Stochastic Moving MNIST frames" loading="lazy" />
+                    <figcaption>Ground-truth future frames</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="assets/images/smmnist/latent_sde_grid.png"
+                      alt="Latent SDE Stochastic Moving MNIST predictions" loading="lazy" />
+                    <figcaption>Latent SDE rollout</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="assets/images/smmnist/latent_nsf_recursive.png"
+                      alt="Recursive Latent NSF Stochastic Moving MNIST predictions" loading="lazy" />
+                    <figcaption>Latent NSF (recursive)</figcaption>
+                  </figure>
+                  <figure>
+                    <img src="assets/images/smmnist/latent_nsf_onestep.png"
+                      alt="One-step Latent NSF Stochastic Moving MNIST predictions" loading="lazy" />
+                    <figcaption>Latent NSF (one-step)</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="bibtex">
+      <div class="panel">
+        <h2>BibTeX</h2>
+        <div class="bibtex-block">
+          <button type="button" class="copy-btn" data-copy-target="#bibtex-entry" aria-label="Copy BibTeX"
+            title="Copy BibTeX">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span class="copy-feedback" aria-hidden="true"></span>
+          </button>
+          <pre id="bibtex-entry">@inproceedings{kiyohara2025neural,
+  title     = {Neural Stochastic Flows: Solver-Free Modelling and Inference for {SDE} Solutions},
+  author    = {Naoki Kiyohara and Edward Johns and Yingzhen Li},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2025}
+}</pre>
+        </div>
+      </div>
+    </section>
+
+  </div>
+  <script>
+    // Expand / Collapse all
+    function toggleAll(open) {
+      document.querySelectorAll('#results details').forEach(d => d.open = open);
+    }
+    // Deep-link support: open detail if hash matches
+    (function () {
+      const id = location.hash.replace('#', '');
+      if (!id) return;
+      const d = document.getElementById(id);
+      if (d && d.tagName.toLowerCase() === 'details') { d.open = true; d.scrollIntoView({ block: 'start' }); }
+    })();
+    // Keep video posters in sync with the active color theme so the first frame shows before playback.
+    (function () {
+      const videos = Array.from(document.querySelectorAll('video[data-poster-light]'));
+      if (!videos.length) return;
+
+      const prefersDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      const pickPoster = (video, theme) => {
+        if (theme === 'dark') {
+          return video.dataset.posterDark || video.dataset.posterLight || '';
+        }
+        return video.dataset.posterLight || video.dataset.posterDark || '';
+      };
+      const applyPosters = () => {
+        const explicitTheme = document.documentElement.getAttribute('data-theme');
+        const prefersDark = prefersDarkQuery ? prefersDarkQuery.matches : false;
+        const theme = explicitTheme === 'dark' || (!explicitTheme && prefersDark) ? 'dark' : 'light';
+        videos.forEach(video => {
+          const poster = pickPoster(video, theme);
+          if (poster) video.setAttribute('poster', poster);
+        });
+      };
+
+      applyPosters();
+
+      if (prefersDarkQuery) {
+        const handler = () => applyPosters();
+        if (typeof prefersDarkQuery.addEventListener === 'function') {
+          prefersDarkQuery.addEventListener('change', handler);
+        } else if (typeof prefersDarkQuery.addListener === 'function') {
+          prefersDarkQuery.addListener(handler);
+        }
+      }
+
+      if ('MutationObserver' in window) {
+        const observer = new MutationObserver(applyPosters);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      }
+    })();
+    (function () {
+      const grids = document.querySelectorAll('.image-grid');
+      if (!grids.length) return;
+
+      const sync = () => {
+        grids.forEach(grid => {
+          const rows = new Map();
+          grid.querySelectorAll('figure').forEach(fig => {
+            const caption = fig.querySelector('figcaption');
+            if (!caption) return;
+            caption.style.minHeight = '';
+            const key = fig.offsetTop;
+            if (!rows.has(key)) rows.set(key, []);
+            rows.get(key).push(caption);
+          });
+          rows.forEach(captions => {
+            const maxHeight = Math.max(...captions.map(cap => cap.offsetHeight));
+            captions.forEach(cap => cap.style.minHeight = `${maxHeight}px`);
+          });
+        });
+      };
+
+      window.addEventListener('load', sync, { passive: true });
+      window.addEventListener('resize', sync, { passive: true });
+      grids.forEach(grid => grid.querySelectorAll('img').forEach(img => {
+        if (!img.complete) img.addEventListener('load', sync, { passive: true, once: true });
+      }));
+      sync();
+    })();
+    (function () {
+      const buttons = document.querySelectorAll('[data-copy-target]');
+      buttons.forEach(btn => {
+        const selector = btn.getAttribute('data-copy-target');
+        if (!selector) return;
+        const target = document.querySelector(selector);
+        if (!target) return;
+
+        const originalLabel = (btn.getAttribute('aria-label') || 'Copy').trim();
+        const originalTitle = btn.getAttribute('title') || originalLabel;
+        btn.setAttribute('aria-label', originalLabel);
+        btn.setAttribute('title', originalTitle);
+        const feedbackEl = btn.querySelector('.copy-feedback');
+
+        let resetTimer = null;
+        const showFeedback = (message, isError = false) => {
+          if (resetTimer) window.clearTimeout(resetTimer);
+          if (message) {
+            btn.setAttribute('aria-label', message);
+            btn.setAttribute('title', message);
+            if (feedbackEl) {
+              feedbackEl.textContent = message;
+              feedbackEl.classList.toggle('is-error', Boolean(isError));
+              feedbackEl.classList.add('is-visible');
+            }
+            resetTimer = window.setTimeout(() => {
+              btn.setAttribute('aria-label', originalLabel);
+              btn.setAttribute('title', originalTitle);
+              if (feedbackEl) {
+                feedbackEl.textContent = '';
+                feedbackEl.classList.remove('is-visible');
+                feedbackEl.classList.remove('is-error');
+              }
+            }, 1800);
+          } else {
+            btn.setAttribute('aria-label', originalLabel);
+            btn.setAttribute('title', originalTitle);
+            if (feedbackEl) {
+              feedbackEl.textContent = '';
+              feedbackEl.classList.remove('is-visible');
+              feedbackEl.classList.remove('is-error');
+            }
+          }
+        };
+
+        btn.addEventListener('click', async () => {
+          const text = target.textContent;
+          if (!text) return;
+
+          let copied = false;
+          if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+              await navigator.clipboard.writeText(text);
+              copied = true;
+            } catch (_err) {
+              copied = false;
+            }
+          }
+
+          if (!copied) {
+            try {
+              const textarea = document.createElement('textarea');
+              textarea.value = text;
+              textarea.setAttribute('readonly', '');
+              textarea.style.position = 'fixed';
+              textarea.style.opacity = '0';
+              document.body.appendChild(textarea);
+              textarea.focus();
+              textarea.select();
+              textarea.setSelectionRange(0, textarea.value.length);
+              copied = document.execCommand ? document.execCommand('copy') : false;
+              document.body.removeChild(textarea);
+            } catch (_err) {
+              copied = false;
+            }
+          }
+
+          if (copied) {
+            showFeedback('Copied!');
+          } else {
+            showFeedback('Copy failed', true);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+
+</html>
