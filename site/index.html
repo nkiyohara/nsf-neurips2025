@@ -519,6 +519,40 @@
       text-align: center;
     }
 
+    .result-table.solver-landscape th:first-child,
+    .result-table.solver-landscape td:first-child,
+    .result-table.solver-landscape th:nth-child(2),
+    .result-table.solver-landscape td:nth-child(2) {
+      text-align: left;
+    }
+
+    .result-table.solver-landscape td:first-child a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: color-mix(in srgb, var(--link) 50%, var(--text));
+    }
+
+    .status {
+      display: inline-block;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .status-yes {
+      color: var(--accent);
+    }
+
+    .status-no {
+      color: #ff7a7a;
+    }
+
+    .target-ito {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
     .result-table th {
       background: rgba(255, 255, 255, 0.02);
       font-weight: 600;
@@ -1635,6 +1669,76 @@
           </details>
 
         </div>
+      </div>
+    </section>
+
+    <section id="related-work">
+      <div class="panel">
+        <h2>Position of Our Work</h2>
+        <p>We categorise prior work in terms of whether learning and/or sampling avoid fine-grained numerical time-stepping, and the class of dynamics targeted, as summarised below.</p>
+        <table class="result-table solver-landscape">
+          <caption>Solver requirements across continuous-time differential equation models.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Method(s)</th>
+              <th scope="col">Target dynamics</th>
+              <th scope="col">Solver-free training</th>
+              <th scope="col">Solver-free inference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Neural ODEs (<a href="https://arxiv.org/abs/1806.07366" target="_blank" rel="noopener">Chen et&nbsp;al., 2018</a>)</td>
+              <td>General ODEs</td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+            </tr>
+            <tr>
+              <td>Neural flows (<a href="https://arxiv.org/abs/2110.13040" target="_blank" rel="noopener">Bilos et&nbsp;al., 2021</a>)</td>
+              <td>General ODEs</td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+            </tr>
+            <tr>
+              <td>Score-based diffusion via reverse SDEs/PF-ODEs (<a href="https://arxiv.org/abs/2011.13456" target="_blank" rel="noopener">Song et&nbsp;al., 2021</a>; <a href="https://arxiv.org/abs/2210.02747" target="_blank" rel="noopener">Lipman et&nbsp;al., 2023</a>)</td>
+              <td>Pre-defined diffusion SDEs/ODEs</td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+            </tr>
+            <tr>
+              <td>Progressive distillation (<a href="https://openreview.net/forum?id=TIdIXIpzhoI" target="_blank" rel="noopener">Salimans &amp; Ho, 2022</a>)</td>
+              <td>Pre-defined diffusion SDEs/ODEs</td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+            </tr>
+            <tr>
+              <td>Consistency models (<a href="https://arxiv.org/abs/2303.01469" target="_blank" rel="noopener">Song et&nbsp;al., 2023</a>; <a href="https://arxiv.org/abs/2310.02279" target="_blank" rel="noopener">Kim et&nbsp;al., 2024</a>); rectified flows (<a href="https://arxiv.org/abs/2209.03003" target="_blank" rel="noopener">Liu et&nbsp;al., 2023</a>)</td>
+              <td>Pre-defined diffusion SDEs/ODEs</td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+            </tr>
+            <tr>
+              <td>Neural (latent) SDEs (<a href="https://arxiv.org/abs/1905.09883" target="_blank" rel="noopener">Tzen &amp; Raginsky, 2019</a>; <a href="https://arxiv.org/abs/2001.01328" target="_blank" rel="noopener">Li et&nbsp;al., 2020</a>; <a href="https://proceedings.mlr.press/v139/kidger21a.html" target="_blank" rel="noopener">Kidger et&nbsp;al., 2021</a>; <a href="https://openreview.net/forum?id=4VIgNuQ1pY" target="_blank" rel="noopener">Oh et&nbsp;al., 2024</a>; <a href="https://arxiv.org/abs/2110.15739" target="_blank" rel="noopener">Solin et&nbsp;al., 2021</a>)</td>
+              <td><span class="target-ito">General It&ocirc; SDEs</span></td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+            </tr>
+            <tr>
+              <td>ARCTA (<a href="https://openreview.net/forum?id=5yZiP9fZNv" target="_blank" rel="noopener">Course &amp; Nair, 2023</a>); SDE matching (<a href="https://arxiv.org/abs/2502.02472" target="_blank" rel="noopener">Bartosh et&nbsp;al., 2025</a>)</td>
+              <td><span class="target-ito">General It&ocirc; SDEs</span></td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+              <td><span class="status status-no" role="img" aria-label="Solver-dependent">✗</span></td>
+            </tr>
+            <tr>
+              <td><strong>Neural Stochastic Flows</strong> (ours)</td>
+              <td><span class="target-ito">General It&ocirc; SDEs</span></td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+              <td><span class="status status-yes" role="img" aria-label="Solver-free">✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="table-note">'Pre-defined diffusion SDEs/ODEs' refers to a boundary-conditioned diffusion process bridging a fixed base distribution and the data distribution utilised in diffusion models.</p>
+        <p>NSF unifies the solver-free philosophy of neural flows with the expressive power of neural (latent) SDEs. It learns the Markov transition density as a conditional normalising flow, which satisfies the conditions of weak solutions of SDEs by design and regularisation objectives. Unlike diffusion model-specific accelerations, NSF handles arbitrary It&ocirc; SDEs and extends naturally to latent sequence models. The resulting method removes numerical integration while retaining closed-form likelihoods.</p>
       </div>
     </section>
 

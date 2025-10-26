@@ -80,6 +80,7 @@ COLORS = THEMES[THEME_NAME]
 
 config.background_color = COLORS["background"]
 config.default_font = "Inter"  # Ensure Text elements use Inter for visual consistency
+Text.set_default(font=config.default_font)  # Apply Inter to all Text mobjects
 
 GRID_INITIAL_OPACITY = 0.3
 GRID_FINAL_OPACITY = 0.18
