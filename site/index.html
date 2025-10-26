@@ -508,23 +508,53 @@
 
     .result-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 13px;
       margin: 12px 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     }
 
     .result-table caption {
       caption-side: top;
       text-align: left;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .result-table th,
     .result-table td {
-      border: 1px solid var(--border);
       padding: 8px 10px;
       text-align: center;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .result-table th:last-child,
+    .result-table td:last-child {
+      border-right: none;
+    }
+
+    .result-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .result-table thead tr:first-child th:first-child {
+      border-top-left-radius: 10px;
+    }
+
+    .result-table thead tr:first-child th:last-child {
+      border-top-right-radius: 10px;
+    }
+
+    .result-table tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 10px;
+    }
+
+    .result-table tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 10px;
     }
 
     .result-table.solver-landscape th:first-child,
@@ -535,10 +565,15 @@
     }
 
     .result-table.solver-landscape td:first-child a {
-      color: inherit;
+      color: var(--link);
       text-decoration: underline;
       text-decoration-thickness: 1px;
-      text-decoration-color: color-mix(in srgb, var(--link) 50%, var(--text));
+      text-decoration-color: color-mix(in srgb, var(--link) 50%, transparent);
+      transition: text-decoration-color 0.2s ease;
+    }
+
+    .result-table.solver-landscape td:first-child a:hover {
+      text-decoration-color: var(--link);
     }
 
     .status {
@@ -562,8 +597,26 @@
     }
 
     .result-table th {
-      background: rgba(255, 255, 255, 0.02);
+      background: linear-gradient(180deg, rgba(100, 150, 255, 0.15) 0%, rgba(100, 150, 255, 0.08) 100%);
       font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .result-table tbody tr {
+      transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .result-table tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .result-table tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .result-table tbody tr:hover {
+      background: rgba(100, 150, 255, 0.08) !important;
+      transform: scale(1.002);
     }
 
     .result-table td:first-child,
