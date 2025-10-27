@@ -1,5 +1,7 @@
 # Neural Stochastic Flows – project page
 
+[Visit the project page](https://nkiyohara.github.io/nsf-neurips2025/)
+
 This repository hosts the NeurIPS 2025 project page for *Neural Stochastic
 Flows*. The codebase is organised to keep reproducible build steps separate
 from the lightweight site that gets deployed.
