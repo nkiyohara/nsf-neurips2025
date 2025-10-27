@@ -45,3 +45,7 @@ GitHub workflow definitions live under `.github/workflows/` (see
 - Keep long-lived source artefacts (SVG, reference data) under `assets/`.
 - Commit only the optimised media inside `site/assets/` to keep diffs and
   deploy size small.
+
+## License
+
+MIT License — feel free to use, modify, or share this project, as long as the original license is included.
