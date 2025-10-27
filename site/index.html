@@ -857,6 +857,17 @@
         font-size: 0.95em;
       }
     }
+
+    /* Invert grayscale SVGs in dark mode */
+    @media (prefers-color-scheme: dark) {
+      .invert-dark {
+        filter: invert(1);
+      }
+    }
+
+    html[data-theme="dark"] .invert-dark {
+      filter: invert(1);
+    }
   </style>
   <script>
     window.MathJax = {
@@ -1233,18 +1244,18 @@
         <div class="image-grid">
           <figure>
             <img src="assets/images/latent/vssm.svg" alt="Graphical model for a standard variational state-space model"
-              loading="lazy">
+              loading="lazy" class="invert-dark">
             <figcaption>Standard VSSM: discrete-time latent transitions.</figcaption>
           </figure>
           <figure>
             <img src="assets/images/latent/latent_nsf.svg" alt="Graphical model for latent Neural Stochastic Flows"
-              loading="lazy">
+              loading="lazy" class="invert-dark">
             <figcaption>Latent NSF: solver-free continuous-time transitions parameterised by \(\Delta t\).</figcaption>
           </figure>
           <figure>
             <img src="assets/images/latent/skip_kl.svg" alt="Skip KL objective for latent Neural Stochastic Flows"
-              loading="lazy">
-            <figcaption>Skip-KL objective compares direct transitions with recursively generated ones.</figcaption>
+              loading="lazy" class="invert-dark">
+            <figcaption>Skip-KL objective compares direct transitions with the fully conditioned posterior.</figcaption>
           </figure>
         </div>
         <div class="panel-text">
