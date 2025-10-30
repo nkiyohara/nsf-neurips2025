@@ -7,12 +7,19 @@
   <title>Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions</title>
   <meta name="description"
     content="Neural Stochastic Flows learn solver-free transition densities for stochastic differential equations using conditional normalising flows and flow-consistency regularisation.">
+  <link rel="canonical" href="https://nkiyohara.github.io/nsf-neurips2025/">
   <meta property="og:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions">
   <meta property="og:description"
     content="Solver-free modelling and inference for SDE solutions with conditional normalising flows.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="assets/images/teaser.jpg">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nkiyohara.github.io/nsf-neurips2025/">
+  <meta property="og:image" content="https://nkiyohara.github.io/nsf-neurips2025/assets/images/teaser.jpg">
+  <meta property="og:image:alt" content="Teaser illustration for Neural Stochastic Flows">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions">
+  <meta name="twitter:description"
+    content="Solver-free modelling and inference for SDE solutions with conditional normalising flows.">
+  <meta name="twitter:image" content="https://nkiyohara.github.io/nsf-neurips2025/assets/images/teaser.jpg">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,6 +38,55 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
   <script src="js/main.js" defer></script>
   <meta name="color-scheme" content="dark light">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "name": "Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions",
+      "headline": "Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions",
+      "abstract": "Neural Stochastic Flows (NSFs) learn solver-free transition densities for stochastic differential equations using conditional normalising flows and flow-consistency regularisation. They enable sampling between arbitrary states in a single step, accelerating inference while retaining distributional accuracy across synthetic and real-world datasets.",
+      "url": "https://nkiyohara.github.io/nsf-neurips2025/",
+      "inLanguage": "en",
+      "datePublished": "2025-09-18",
+      "image": "https://nkiyohara.github.io/nsf-neurips2025/assets/images/teaser.jpg",
+      "author": [
+        {
+          "@type": "Person",
+          "name": "Naoki Kiyohara",
+          "affiliation": [
+            {
+              "@type": "Organization",
+              "name": "Imperial College London"
+            },
+            {
+              "@type": "Organization",
+              "name": "Canon Inc."
+            }
+          ]
+        },
+        {
+          "@type": "Person",
+          "name": "Edward Johns",
+          "affiliation": {
+            "@type": "Organization",
+            "name": "Imperial College London"
+          }
+        },
+        {
+          "@type": "Person",
+          "name": "Yingzhen Li",
+          "affiliation": {
+            "@type": "Organization",
+            "name": "Imperial College London"
+          }
+        }
+      ],
+      "publisher": {
+        "@type": "Organization",
+        "name": "Neural Information Processing Systems"
+      }
+    }
+  </script>
 </head>
 
 <body>
@@ -61,7 +117,7 @@
         </a>
       </div>
     </header>
-
+    <main id="main-content">
     <section id="abstract" class="abstract-section">
       <div class="abstract-card">
         <h2>Abstract</h2>
@@ -73,9 +129,8 @@
           inherited from stochastic flows. <strong>This enables sampling between arbitrary states in a single step</strong>, providing up
           to two orders of magnitude speedup for distant time points. Experiments on synthetic SDE simulations and
           real-world tracking and video data demonstrate that <strong>NSF maintains distributional accuracy comparable to
-          numerical approaches</strong> while dramatically reducing computation for arbitrary time-point sampling, enabling
-          numerical approaches while dramatically reducing computation for arbitrary time-point sampling, enabling
-          applications where numerical solvers remain prohibitively expensive.</p>
+          numerical approaches</strong> while dramatically reducing computation for arbitrary time-point sampling,
+          enabling applications where numerical solvers remain prohibitively expensive.</p>
       </div>
     </section>
 
@@ -989,7 +1044,7 @@
         </div>
       </div>
     </section>
-
+    </main>
   </div>
 </body>
 
