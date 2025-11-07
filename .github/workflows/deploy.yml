@@ -68,6 +68,9 @@ jobs:
           PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
         run: ./tools/cli/build_media.sh
 
+      - name: Sync static figures
+        run: ./tools/cli/stage_assets.sh --copy
+
       - name: Upload site bundle
         uses: actions/upload-pages-artifact@v3
         with:
