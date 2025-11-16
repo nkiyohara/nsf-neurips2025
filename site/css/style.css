@@ -191,6 +191,11 @@ header.hero {
   margin: 2px 0 0;
 }
 
+.venue a {
+  color: var(--link);
+  text-decoration: none;
+}
+
 .abstract-section {
   margin-top: 28px;
 }
