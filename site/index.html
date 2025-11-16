@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions</title>
   <meta name="description"
-    content="Neural Stochastic Flows learn solver-free transition densities for stochastic differential equations using conditional normalising flows and flow-consistency regularisation.">
+    content="A solver-free approach for modelling SDE solutions with conditional normalising flows, enabling direct sampling between arbitrary time points.">
   <link rel="canonical" href="https://nkiyohara.github.io/nsf-neurips2025/">
   <meta name="google-site-verification" content="eGSTGsxZa4Nu4AuizmddLZ7aBxPB9lxbAyWBd9RHfyo">
   <meta property="og:title" content="Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions">
@@ -45,6 +45,7 @@
       "@type": "ScholarlyArticle",
       "name": "Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions",
       "headline": "Neural Stochastic Flows: Solver-Free Modelling and Inference for SDE Solutions",
+      "description": "A solver-free approach for modelling SDE solutions with conditional normalising flows, enabling direct sampling between arbitrary time points.",
       "abstract": "Neural Stochastic Flows (NSFs) learn solver-free transition densities for stochastic differential equations using conditional normalising flows and flow-consistency regularisation. They enable sampling between arbitrary states in a single step, accelerating inference while retaining distributional accuracy across synthetic and real-world datasets.",
       "url": "https://nkiyohara.github.io/nsf-neurips2025/",
       "inLanguage": "en",
@@ -93,16 +94,19 @@
 <body>
   <div class="wrap">
     <header class="hero">
-      <h1 class="title">Neural Stochastic Flows:<wbr> Solver-Free Modelling and Inference for SDE Solutions</h1>
       <p class="venue">NeurIPS 2025</p>
-      <div class="authors">
-        <span><a href="https://nkiyohara.github.io/" target="_blank" rel="noopener">Naoki
-            Kiyohara</a><sup>1,2</sup></span>
-        <span><a href="https://www.robot-learning.uk/" target="_blank" rel="noopener">Edward
-            Johns</a><sup>1</sup></span>
-        <span><a href="https://yingzhenli.net" target="_blank" rel="noopener">Yingzhen Li</a><sup>1</sup></span>
-        <span class="affil"><sup>1</sup>Imperial College London, <sup>2</sup>Canon Inc.</span>
-      </div>
+      <h1 class="title">Neural Stochastic Flows:<wbr> Solver-Free Modelling and Inference for SDE Solutions</h1>
+      <p class="subtitle">A solver-free approach for modelling SDE solutions with conditional normalising flows, enabling
+        direct sampling between arbitrary time points.</p>
+      <ul class="authors">
+        <li><a href="https://nkiyohara.github.io/" target="_blank" rel="noopener">Naoki
+            Kiyohara</a><sup>1,2</sup></li>
+        <li><a href="https://www.robot-learning.uk/" target="_blank" rel="noopener">Edward
+            Johns</a><sup>1</sup></li>
+        <li><a href="https://yingzhenli.net" target="_blank" rel="noopener">Yingzhen
+            Li</a><sup>1</sup></li>
+      </ul>
+      <p class="affil"><sup>1</sup> Imperial College London &nbsp;•&nbsp; <sup>2</sup> Canon Inc.</p>
       <div class="cta">
         <a class="btn primary" href="https://arxiv.org/abs/2510.25769" target="_blank" rel="noopener">
           <svg class="icon icon-file-text" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -115,6 +119,12 @@
             <use href="assets/icons.svg#icon-github"></use>
           </svg>
           Code
+        </a>
+        <a class="btn ghost" href="#bibtex">
+          <svg class="icon icon-bookmark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="assets/icons.svg#icon-bookmark"></use>
+          </svg>
+          BibTeX
         </a>
       </div>
     </header>
@@ -191,6 +201,12 @@
             </figcaption>
           </figure>
         </div>
+        <figure class="figure-one">
+          <img src="assets/images/teaser.jpg" width="1600" height="900" loading="lazy"
+            alt="Visual summary showing Neural Stochastic Flows sampling trajectories without numerical solvers.">
+          <figcaption>NSF overview: the conditional flow learns solver-free transitions so future states are reachable in a
+            single step while matching the stochastic dynamics.</figcaption>
+        </figure>
       </div>
     </section>
 
@@ -585,8 +601,8 @@
         <p>Detailed experimental configurations are documented in the paper.</p>
 
         <div class="results-toolbar">
-          <button class="btn small" type="button" onclick="toggleAll(true)">Expand all</button>
-          <button class="btn small" type="button" onclick="toggleAll(false)">Collapse all</button>
+          <button class="btn small" type="button" data-toggle-details="open">Expand all</button>
+          <button class="btn small" type="button" data-toggle-details="close">Collapse all</button>
         </div>
 
         <div class="results-accordion">
@@ -1045,6 +1061,23 @@
         </div>
       </div>
     </section>
+
+    <div class="lightbox" id="figure-lightbox" aria-hidden="true" role="dialog" aria-label="Expanded figure view">
+      <div class="lightbox__backdrop" data-lightbox-dismiss></div>
+      <div class="lightbox__content" role="document">
+        <button type="button" class="lightbox__close" aria-label="Close expanded figure" data-lightbox-dismiss>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+        <figure>
+          <img src="about:blank" alt="" aria-hidden="true">
+          <figcaption></figcaption>
+        </figure>
+      </div>
+    </div>
+
     </main>
   </div>
 </body>

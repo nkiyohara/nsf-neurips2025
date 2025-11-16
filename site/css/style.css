@@ -167,6 +167,8 @@ header.hero {
   justify-content: center;
   gap: 10px 16px;
   font-size: 15px;
+  list-style: none;
+  padding-left: 0;
 }
 
 .authors a {
@@ -232,6 +234,89 @@ header.hero {
 .abstract-card p {
   margin: 14px 0 0;
   font-size: 15.5px;
+}
+
+.figure-one {
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  padding: 0;
+  box-shadow: none;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.figure-one img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.figure-one figcaption {
+  margin: 0;
+  padding: 16px 18px 18px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+
+.figure-one.is-lightbox-trigger {
+  cursor: zoom-in;
+}
+
+.figure-one.is-lightbox-trigger::before,
+.figure-one.is-lightbox-trigger::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+
+.figure-one.is-lightbox-trigger::before {
+  border: 1px solid var(--accent);
+  background-color: color-mix(in srgb, var(--panel) 85%, rgba(0, 0, 0, 0.05));
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.figure-one.is-lightbox-trigger::after {
+  background-color: var(--accent);
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='5.2' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14.8 14.8L20.4 20.4' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/26px 26px no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='5.2' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14.8 14.8L20.4 20.4' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/26px 26px no-repeat;
+  z-index: 3;
+}
+
+.figure-one.is-lightbox-trigger:hover,
+.figure-one.is-lightbox-trigger:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
+  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.16);
+  transform: translateY(-2px);
+}
+
+.figure-one.is-lightbox-trigger:hover img,
+.figure-one.is-lightbox-trigger:focus-visible img {
+  transform: scale(1.01);
+}
+
+.figure-one.is-lightbox-trigger:hover::before,
+.figure-one.is-lightbox-trigger:focus-visible::before,
+.figure-one.is-lightbox-trigger:hover::after,
+.figure-one.is-lightbox-trigger:focus-visible::after {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 section {
@@ -363,6 +448,13 @@ h3 {
   margin-top: 24px;
 }
 
+.result-label {
+  margin: 22px 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -388,6 +480,8 @@ h3 {
   /* Safari compatibility: ensure proper box model */
   box-sizing: border-box;
   min-width: 0;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .image-grid img {
@@ -403,6 +497,7 @@ h3 {
   box-sizing: border-box;
   /* Safari compatibility: prevent image overflow */
   max-height: 220px;
+  transition: transform 0.2s ease;
 }
 
 .image-grid figcaption {
@@ -415,7 +510,79 @@ h3 {
   line-height: 1.45;
   /* Safari compatibility: ensure caption doesn't overflow or overlap */
   min-height: fit-content;
-  padding-top: 2px;
+  padding: 14px 0 2px;
+  position: relative;
+}
+
+.image-grid figcaption::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -12px;
+  right: -12px;
+  height: 1px;
+  background: var(--border);
+}
+
+.image-grid figure.is-lightbox-trigger {
+  cursor: zoom-in;
+}
+
+.image-grid figure.is-lightbox-trigger::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  background-color: color-mix(in srgb, var(--panel) 85%, rgba(0, 0, 0, 0.05));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+
+.image-grid figure.is-lightbox-trigger:hover,
+.image-grid figure.is-lightbox-trigger:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+  transform: translateY(-2px);
+}
+
+.image-grid figure.is-lightbox-trigger:hover img,
+.image-grid figure.is-lightbox-trigger:focus-visible img {
+  transform: scale(1.01);
+}
+
+.image-grid figure.is-lightbox-trigger:hover::before,
+.image-grid figure.is-lightbox-trigger:focus-visible::before {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.image-grid figure.is-lightbox-trigger::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 36px;
+  height: 36px;
+  background-color: var(--accent);
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='5.2' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14.8 14.8L20.4 20.4' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/24px 24px no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='5.2' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14.8 14.8L20.4 20.4' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/24px 24px no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 3;
+}
+
+.image-grid figure.is-lightbox-trigger:hover::after,
+.image-grid figure.is-lightbox-trigger:focus-visible::after {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .result-figure {
@@ -847,4 +1014,111 @@ mjx-container[jax="SVG"]>svg {
 
 html[data-theme="dark"] .invert-dark {
   filter: invert(1);
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(18px, 4vw, 48px);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 1200;
+}
+
+.lightbox.is-active {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 80%, #000000);
+  opacity: 0.92;
+}
+
+.lightbox__content {
+  position: relative;
+  max-width: min(1200px, 96vw);
+  max-height: min(90vh, 900px);
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  padding: clamp(16px, 3vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.lightbox__content figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lightbox__content img {
+  width: 100%;
+  max-height: calc(80vh - 80px);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 6px;
+  box-sizing: border-box;
+  object-fit: contain;
+}
+
+.lightbox__content figcaption {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 1px solid var(--ghost-border);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--panel) 60%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.lightbox__close:hover {
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  transform: scale(1.05);
+}
+
+.lightbox__close svg {
+  width: 18px;
+  height: 18px;
+}
+
+body.lightbox-open {
+  overflow: hidden;
+}
+
+.image-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .image-grid--two {
+    grid-template-columns: 1fr;
+  }
 }
