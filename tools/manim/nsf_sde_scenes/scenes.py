@@ -706,6 +706,77 @@ class EnsemblePathsToDensity(Scene):
         self.wait(0.8)
 
 
+class EnsemblePathsToDensityFinalFrame(Scene):
+    """Final frame of EnsemblePathsToDensity without title, with 1/2 height for PNG export."""
+
+    def construct(self):
+        # Adjust height to 1/2 of original (5 -> 2.5)
+        axes = Axes(
+            x_range=[0, 1.0, 0.1],
+            y_range=[-3, 3, 1],
+            x_length=10,
+            y_length=5 * 0.5,  # 1/2 of original height
+            tips=False,
+        ).move_to(ORIGIN).set_color(COLORS["axes"])
+        axes.x_axis.set_opacity(0)
+        axes.y_axis.set_opacity(0)
+
+        origin_lower = axes.c2p(0, axes.y_range[0])
+        time_axis_line = Line(
+            origin_lower,
+            axes.c2p(axes.x_range[1], axes.y_range[0]),
+            color=COLORS["axes"],
+        )
+        time_axis_line.set_cap_style(CapStyleType.ROUND)
+        state_axis_line = Line(
+            origin_lower,
+            axes.c2p(0, axes.y_range[1]),
+            color=COLORS["axes"],
+        )
+        state_axis_line.set_cap_style(CapStyleType.ROUND)
+
+        # Labels removed as requested
+        self.add(axes, state_axis_line, time_axis_line)
+
+        # No title - removed as requested
+        # No formula either - just the visualization
+
+        x0_val = 0.0
+        start_dot = Dot(axes.c2p(0.0, x0_val), color=COLORS["annotation"], radius=0.06)
+        self.add(start_dot)
+
+        times_direct = [0.25, 0.5, 0.75, 1.0]
+        time_colors = color_gradient(
+            [COLORS["primary"], COLORS["secondary"]], len(times_direct)
+        )
+        rng_direct = np.random.default_rng(7)
+
+        arrow_end_offset = 0.03
+        all_arrows = VGroup()
+        all_dots = VGroup()
+        for t_val, color in zip(times_direct, time_colors):
+            num_samples = 10
+            std = 0.6 * np.sqrt(t_val + 1e-6)
+            samples = x0_val + rng_direct.normal(0, std, size=num_samples)
+            dots = VGroup(
+                *[Dot(axes.c2p(t_val, s), color=color, radius=0.034) for s in samples]
+            )
+            t_end = max(t_val - arrow_end_offset, 0.02)
+            arrow = CurvedArrow(
+                axes.c2p(0.0, 0.0),
+                axes.c2p(t_end, 0.0),
+                angle=-0.85,
+                color=color,
+                stroke_width=5,
+            )
+            arrow.set(stroke_cap=CapStyleType.SQUARE)
+            all_arrows.add(arrow)
+            all_dots.add(*dots)
+
+        self.add(all_arrows, all_dots)
+        self.wait(0.1)  # Minimal wait to ensure rendering
+
+
 # Chapman–Kolmogorov consistency helper functions
 def a_of_dt(dt: float, lam: float, kappa: float = 1.2) -> float:
     # OU contraction raised to (1 + c*λ) to introduce a mild semigroup violation
